@@ -1,0 +1,601 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/masterLayoutId"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_dcr_screen"
+    android:fillViewport="true"
+    android:overScrollMode="never"
+    android:scrollbars="none"
+
+    >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:orientation="vertical"
+        android:paddingBottom="24dp"
+        tools:context=".Activity.Doctor.DCR.AddDCRActivity">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar_custom"
+            android:layout_width="match_parent"
+            android:layout_height="68dp"
+            android:background="@drawable/bg_dcr_toolbar_glossy"
+            android:elevation="10dp"
+            app:navigationIcon="@drawable/ic_arrow_back_white_24"
+            app:theme="@style/ToolbarTheme"
+
+            >
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/toolbar_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:fontFamily="@font/lato"
+                    android:text="@string/tag_add_dcr"
+                    android:textColor="@android:color/white"
+                    android:textSize="21sp"
+                    android:textStyle="bold" />
+
+
+            </RelativeLayout>
+
+
+        </androidx.appcompat.widget.Toolbar>
+
+        <!-- <RelativeLayout
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:layout_marginStart="8dp"
+             android:layout_marginTop="8dp"
+             android:layout_marginEnd="8dp"
+             android:background="@color/white"
+             android:elevation="10dp"
+             android:orientation="vertical">
+
+             <LinearLayout
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:layout_marginStart="10dp"
+                 android:layout_marginEnd="10dp"
+                 android:layout_marginBottom="8dp"
+                 android:orientation="horizontal"
+                 android:padding="10dp">
+
+                 <ImageView
+                     android:layout_width="60dp"
+                     android:layout_height="60dp"
+                     android:src="@drawable/ic_doctor"
+                     android:transitionName="imgtrans" />
+
+                 <LinearLayout
+                     android:layout_width="match_parent"
+                     android:layout_height="wrap_content"
+                     android:layout_marginLeft="10sp"
+                     android:orientation="vertical">
+
+                     <TextView
+                         android:id="@+id/nameTxt"
+                         android:layout_width="match_parent"
+                         android:layout_height="wrap_content"
+                         android:textColor="@color/main"
+                         android:textSize="16sp"
+                         android:transitionName="nametrans" />
+
+                     <LinearLayout
+                         android:layout_width="match_parent"
+                         android:layout_height="wrap_content"
+                         android:layout_marginTop="5sp"
+                         android:orientation="horizontal">
+
+                         <TextView
+                             android:layout_width="wrap_content"
+                             android:layout_height="wrap_content"
+                             android:text="Code : "
+                             android:textColor="@color/black"
+                             android:textSize="13sp" />
+
+                         <TextView
+                             android:id="@+id/codeTxt"
+                             android:layout_width="wrap_content"
+                             android:layout_height="wrap_content"
+                             android:textColor="@color/black"
+                             android:textSize="13sp"
+
+                             />
+                     </LinearLayout>
+
+
+                     <LinearLayout
+                         android:layout_width="match_parent"
+                         android:layout_height="wrap_content"
+                         android:layout_marginTop="5sp"
+                         android:orientation="horizontal">
+
+                         <TextView
+                             android:layout_width="wrap_content"
+                             android:layout_height="wrap_content"
+                             android:text="Doctor Type : "
+                             android:textColor="@color/black"
+                             android:textSize="13sp" />
+
+                         <TextView
+                             android:id="@+id/doctypeTxt"
+                             android:layout_width="wrap_content"
+                             android:layout_height="wrap_content"
+                             android:textColor="@color/black"
+                             android:textSize="13sp"
+
+                             />
+                     </LinearLayout>
+
+                     <LinearLayout
+                         android:layout_width="match_parent"
+                         android:layout_height="wrap_content"
+                         android:layout_marginTop="5sp"
+                         android:orientation="horizontal">
+
+                         <TextView
+                             android:layout_width="wrap_content"
+                             android:layout_height="wrap_content"
+                             android:text="Program Type : "
+                             android:textColor="@color/black"
+                             android:textSize="13sp" />
+
+                         <TextView
+                             android:id="@+id/programTxt"
+                             android:layout_width="wrap_content"
+                             android:layout_height="wrap_content"
+                             android:textColor="@color/black"
+                             android:textSize="13sp"
+
+                             />
+                     </LinearLayout>
+
+
+                 </LinearLayout>
+
+             </LinearLayout>
+
+         </RelativeLayout>-->
+
+        <include
+            android:id="@+id/dochead"
+            layout="@layout/layout_doctor_global" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_dcr_card_glossy"
+            android:elevation="5dp"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:weightSum="3">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/lato_bold"
+                android:text="@string/tag_date"
+                android:textColor="@color/deepBlue"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/dcrdate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:fontFamily="@font/latoregular"
+                android:gravity="end"
+                android:textColor="#24344F"
+                android:textSize="14sp" />
+            <!--<ImageView
+                android:id="@+id/datePickerdcrDate"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_calendar"
+
+
+                />-->
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_dcr_card_glossy"
+            android:elevation="5dp"
+            android:orientation="vertical"
+            android:padding="14dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/lato_bold"
+                android:text="@string/visit_type"
+                android:textColor="@color/deepBlue"
+                android:textSize="14sp" />
+
+            <Spinner
+                android:id="@+id/spiner_visitType"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_dcr_field"
+                android:contentDescription="@string/_0"
+                android:minHeight="48dp" />
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_dcr_card_glossy"
+            android:elevation="5dp"
+            android:orientation="vertical"
+            android:padding="14dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/lato_bold"
+                android:text="@string/chamber"
+                android:textColor="@color/deepBlue"
+                android:textSize="14sp" />
+
+            <Spinner
+                android:id="@+id/chamberSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_dcr_field"
+                android:contentDescription="@string/tag_spinner"
+                android:minHeight="48dp" />
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_dcr_card_glossy"
+            android:elevation="5dp"
+            android:orientation="vertical"
+            android:padding="10dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/tag_territory"
+                android:textStyle="bold" />
+
+            <Spinner
+                android:id="@+id/territorySpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+
+                />
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_dcr_card_glossy"
+            android:elevation="5dp"
+            android:orientation="vertical"
+            android:padding="10dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/tag_market"
+                android:fontFamily="@font/lato" />
+
+            <Spinner
+                android:id="@+id/marketSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+
+                />
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_dcr_card_glossy"
+            android:elevation="5dp"
+            android:orientation="vertical"
+            android:padding="10dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/tag_sub_market"
+                android:textStyle="bold" />
+
+            <Spinner
+                android:id="@+id/submarketSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+
+                />
+
+
+        </LinearLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_dcr_card_glossy"
+            android:elevation="5dp"
+            android:orientation="vertical"
+            android:padding="14dp"
+
+            >
+
+            <TextView
+                android:id="@+id/visitSec"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:fontFamily="@font/lato_bold"
+                android:text="@string/visited_with"
+                android:textColor="@color/deepBlue"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/visitedWithAdd"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentEnd="true"
+                android:background="@drawable/bg_dcr_add_button"
+                android:padding="8dp"
+                android:src="@drawable/ic_baseline_add_24"
+                android:contentDescription="@string/image" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view_VisitedWith"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/visitSec"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:clipToPadding="false"
+                android:paddingBottom="10dp"
+                android:scrollbars="vertical" />
+
+        </RelativeLayout>
+
+
+        <RelativeLayout
+            android:id="@+id/promoGiftSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_dcr_card_glossy"
+            android:elevation="5dp"
+            android:orientation="vertical"
+            android:padding="14dp"
+
+            >
+
+            <TextView
+                android:id="@+id/brandLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:fontFamily="@font/lato_bold"
+                android:text="@string/tag_brand"
+                android:textColor="@color/deepBlue"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/brandAdd"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentEnd="true"
+                android:background="@drawable/bg_dcr_add_button"
+                android:padding="8dp"
+                android:src="@drawable/ic_baseline_add_24"
+                android:contentDescription="@string/image">
+
+            </ImageView>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_viewBrand"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/brandAdd"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentEnd="true"
+                android:clipToPadding="false"
+                android:paddingBottom="10dp"
+                android:scrollbars="vertical" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_dcr_card_glossy"
+            android:elevation="5dp"
+            android:orientation="vertical"
+            android:padding="14dp"
+            android:visibility="gone"
+
+            >
+
+            <TextView
+                android:id="@+id/giftLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:fontFamily="@font/lato_bold"
+                android:text="@string/tag_promo_gift"
+                android:textColor="@color/deepBlue"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/giftAdd"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentEnd="true"
+                android:background="@drawable/bg_dcr_add_button"
+                android:padding="8dp"
+                android:src="@drawable/ic_baseline_add_24"
+                android:contentDescription="@string/image">
+
+            </ImageView>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_viewGift"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/giftAdd"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentEnd="true"
+                android:clipToPadding="false"
+                android:paddingBottom="10dp"
+                android:scrollbars="vertical" />
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_dcr_card_glossy"
+            android:elevation="5dp"
+            android:orientation="vertical"
+            android:padding="14dp"
+
+
+            >
+
+            <EditText
+                android:id="@+id/comment"
+                android:layout_width="match_parent"
+                android:layout_height="96dp"
+                android:background="@drawable/bg_dcr_field"
+                android:fontFamily="@font/latoregular"
+                android:gravity="top|start"
+                android:hint="Comment *"
+                android:inputType="textCapSentences|textMultiLine"
+                android:padding="12dp"
+                android:textColor="#24344F"
+                android:textColorHint="#7A8AA3"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_dcr_card_glossy"
+            android:elevation="5dp"
+            android:orientation="horizontal"
+            android:padding="14dp">
+
+            <TextView
+                android:id="@+id/latlon"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_gravity="center"
+                android:fontFamily="@font/latoregular"
+                android:hint="Location"
+                android:textSize="14sp"
+                android:textColor="@color/deepBlue"
+                android:textColorHint="#7A8AA3" />
+            <ImageView
+                android:id="@+id/location"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_dcr_add_button"
+                android:contentDescription="@string/image"
+                android:padding="9dp"
+                android:src="@drawable/ic_location_wide"
+                app:tint="@color/white"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="18dp"
+            android:layout_marginEnd="12dp"
+            android:background="@android:color/transparent"
+            android:orientation="horizontal"
+            android:paddingBottom="8dp">
+
+            <Button
+                android:id="@+id/submitbtnClick"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:background="@drawable/bg_dcr_submit_button"
+                android:backgroundTint="@null"
+                android:elevation="6dp"
+                android:padding="12dp"
+                android:text="@string/tag_submit"
+                android:textAllCaps="false"
+                android:textSize="16sp"
+                android:fontFamily="@font/lato_bold"
+                android:textColor="@color/white" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

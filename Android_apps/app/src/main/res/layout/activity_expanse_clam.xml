@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/masterLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_doctor_form_screen"
+    android:orientation="vertical"
+    tools:context=".Activity.Expense.ExpanseClamActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar_custom"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@drawable/bg_doctor_form_toolbar"
+        android:elevation="12dp"
+        android:paddingEnd="8dp"
+        app:navigationIcon="@drawable/ic_arrow_back_white_24"
+        app:theme="@style/ToolbarThemeMainColor">
+
+        <TextView
+            android:id="@+id/toolbar_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/lato_bold"
+            android:text="Expense Claim"
+            android:textColor="@color/white"
+            android:textSize="21sp" />
+    </androidx.appcompat.widget.Toolbar>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="12dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_doctor_form_section"
+                android:elevation="7dp"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="8dp"
+                    android:fontFamily="@font/lato_bold"
+                    android:text="Claim Information"
+                    android:textColor="@color/deepBlue"
+                    android:textSize="16sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/bg_doctor_form_field"
+                    android:elevation="3dp"
+                    android:gravity="center_vertical"
+                    android:minHeight="60dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="10dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/latoregular"
+                            android:text="@string/date_man"
+                            android:textColor="#60758F"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/expdate"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="4dp"
+                            android:paddingBottom="4dp"
+                            android:text="-----"
+                            android:textColor="@color/deepBlue"
+                            android:textSize="15sp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/datePickerExpDate"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:clickable="true"
+                        android:contentDescription="@string/date_man"
+                        android:focusable="true"
+                        android:padding="10dp"
+                        android:src="@drawable/ic_calendar" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/exptypelayfixed"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/bg_doctor_form_field"
+                    android:elevation="3dp"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/latoregular"
+                        android:text="Expense Type"
+                        android:textColor="#60758F"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/expfixedtypename"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:fontFamily="@font/lato_bold"
+                        android:textColor="@color/deepBlue"
+                        android:textSize="16sp"
+                        tools:text="Travel Expense" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/exptypelay"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/bg_doctor_form_field"
+                    android:elevation="3dp"
+                    android:orientation="vertical"
+                    android:paddingStart="14dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="6dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/latoregular"
+                        android:text="@string/expanse_type_man"
+                        android:textColor="@color/black"
+                        android:textSize="14sp" />
+
+                    <Spinner
+                        android:id="@+id/expanseType"
+                        android:layout_width="match_parent"
+                        android:layout_height="42dp" />
+                </LinearLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"
+                    android:hint="@string/amount">
+
+                    <EditText
+                        android:id="@+id/amountValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_doctor_form_field"
+                        android:fontFamily="@font/lato_bold"
+                        android:inputType="numberDecimal"
+                        android:minHeight="56dp"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:textColor="@color/deepBlue"
+                        android:textSize="17sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_doctor_form_section"
+                android:elevation="7dp"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="8dp"
+                    android:fontFamily="@font/lato_bold"
+                    android:text="Expense Details"
+                    android:textColor="@color/deepBlue"
+                    android:textSize="16sp" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_viewitem"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clipToPadding="false"
+                    android:nestedScrollingEnabled="false"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp"
+                    android:scrollbars="none" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"
+                    android:hint="Comment">
+
+                    <EditText
+                        android:id="@+id/remarksTxt"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_doctor_form_field"
+                        android:gravity="top|start"
+                        android:inputType="textCapSentences|textMultiLine"
+                        android:minHeight="90dp"
+                        android:padding="14dp"
+                        android:textColor="@color/black"
+                        android:textSize="15sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_doctor_form_section"
+                android:elevation="7dp"
+                android:padding="14dp">
+
+                <TextView
+                    android:id="@+id/imgName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:fontFamily="@font/lato_bold"
+                    android:gravity="center_vertical"
+                    android:text="@string/bill_image"
+                    android:textColor="@color/deepBlue"
+                    android:textSize="16sp" />
+
+                <ImageButton
+                    android:id="@+id/camera"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_alignParentEnd="true"
+                    android:background="@drawable/bg_doctor_form_button"
+                    android:contentDescription="@string/image"
+                    android:padding="10dp"
+                    android:src="@drawable/ic_baseline_add_a_photo_24"
+                    app:tint="@color/white" />
+
+                <ImageButton
+                    android:id="@+id/galleryButton"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_toStartOf="@id/camera"
+                    android:background="@drawable/bg_doctor_form_button"
+                    android:contentDescription="@string/image"
+                    android:padding="10dp"
+                    android:src="@drawable/ic_baseline_add_photo_alternate_24"
+                    android:visibility="gone"
+                    app:tint="@color/white" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="190dp"
+                    android:layout_below="@id/imgName"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_doctor_form_field"
+                    android:padding="5dp">
+
+                    <ImageView
+                        android:id="@+id/imgbg"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@null"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_imgbg"
+                        android:visibility="gone" />
+
+                    <ozaydin.serkan.com.image_zoom_view.ImageViewZoom
+                        android:id="@+id/imgaeView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_imgbg"
+                        android:visibility="visible" />
+                </FrameLayout>
+            </RelativeLayout>
+
+            <Button
+                android:id="@+id/btnSubmit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/bg_doctor_form_button"
+                android:elevation="5dp"
+                android:fontFamily="@font/lato_bold"
+                android:minHeight="54dp"
+                android:text="@string/submit"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/btnUpdate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/bg_doctor_form_button"
+                android:elevation="5dp"
+                android:fontFamily="@font/lato_bold"
+                android:minHeight="54dp"
+                android:text="@string/update"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:visibility="gone" />
+
+            <include
+                android:id="@+id/approve_layout"
+                layout="@layout/layout_approval"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:visibility="gone" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

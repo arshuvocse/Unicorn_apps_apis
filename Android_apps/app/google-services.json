@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "169993029805",
+    "project_id": "unicornapps-308e5",
+    "storage_bucket": "unicornapps-308e5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:169993029805:android:f3281ec1cc439837d25e24",
+        "android_client_info": {
+          "package_name": "com.creatrix.unicorn"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDK2J8Qb2SyKvn2hClRW_hc2Y3yZ0FYquw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

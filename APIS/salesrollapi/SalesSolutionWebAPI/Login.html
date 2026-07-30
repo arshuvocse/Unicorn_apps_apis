@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign in | Sales Roll API</title>
+    <link rel="stylesheet" href="Content/bootstrap.min.css" />
+    <link rel="stylesheet" href="Content/login.css" />
+</head>
+<body class="login-page">
+    <main class="login-shell">
+        <section class="login-intro" aria-label="Sales Roll API introduction">
+            <a class="brand" href="./" aria-label="Sales Roll API home">
+                <span class="brand-mark">SR</span>
+                <span>
+                    <strong>Sales Roll</strong>
+                    <small>API Management Portal</small>
+                </span>
+            </a>
+
+            <div class="intro-copy">
+                <span class="eyebrow">Secure workspace</span>
+                <h1>Manage your sales operations with confidence.</h1>
+                <p>Sign in to access protected API resources, documentation, and integration tools from one place.</p>
+            </div>
+
+            <div class="trust-note">
+                <span class="trust-icon" aria-hidden="true">&#10003;</span>
+                <span>Protected by bearer token authentication</span>
+            </div>
+        </section>
+
+        <section class="login-panel">
+            <div class="login-card">
+                <div class="card-heading">
+                    <span class="mobile-brand-mark">SR</span>
+                    <p class="welcome">Welcome back</p>
+                    <h2>Sign in to continue</h2>
+                    <p>Enter your account credentials below.</p>
+                </div>
+
+                <form id="loginForm" novalidate>
+                    <div id="loginAlert" class="login-alert" role="alert" aria-live="polite"></div>
+
+                    <div class="field-group">
+                        <label for="username">Username or email</label>
+                        <div class="input-wrap">
+                            <span class="field-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" /></svg>
+                            </span>
+                            <input id="username" name="username" type="text" autocomplete="username"
+                                   placeholder="Enter your username" required autofocus />
+                        </div>
+                        <span class="field-error">Please enter your username.</span>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="password">Password</label>
+                        <div class="input-wrap">
+                            <span class="field-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M7 10V8a5 5 0 0 1 10 0v2M6 10h12a2 2 0 0 1 2 2v8H4v-8a2 2 0 0 1 2-2Z" /></svg>
+                            </span>
+                            <input id="password" name="password" type="password" autocomplete="current-password"
+                                   placeholder="Enter your password" required />
+                            <button id="togglePassword" class="password-toggle" type="button" aria-label="Show password">
+                                <svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" /></svg>
+                            </button>
+                        </div>
+                        <span class="field-error">Please enter your password.</span>
+                    </div>
+
+                    <label class="remember-option">
+                        <input id="rememberMe" type="checkbox" />
+                        <span>Remember my username</span>
+                    </label>
+
+                    <button id="submitButton" class="login-button" type="submit">
+                        <span class="button-label">Sign in securely</span>
+                        <span class="button-loader" aria-hidden="true"></span>
+                        <svg class="button-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+                    </button>
+                </form>
+
+                <div class="login-footer">
+                    <span>Sales Roll API</span>
+                    <a href="swagger">View API documentation</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        (function () {
+            "use strict";
+
+            var form = document.getElementById("loginForm");
+            var username = document.getElementById("username");
+            var password = document.getElementById("password");
+            var rememberMe = document.getElementById("rememberMe");
+            var alertBox = document.getElementById("loginAlert");
+            var submitButton = document.getElementById("submitButton");
+            var togglePassword = document.getElementById("togglePassword");
+            var tokenUrl = "Token";
+            var swaggerUrl = "swagger";
+
+            var savedUsername = localStorage.getItem("salesRollUsername");
+            if (savedUsername) {
+                username.value = savedUsername;
+                rememberMe.checked = true;
+                password.focus();
+            }
+
+            togglePassword.addEventListener("click", function () {
+                var showPassword = password.type === "password";
+                password.type = showPassword ? "text" : "password";
+                togglePassword.classList.toggle("is-visible", showPassword);
+                togglePassword.setAttribute("aria-label", showPassword ? "Hide password" : "Show password");
+            });
+
+            form.addEventListener("submit", function (event) {
+                event.preventDefault();
+                alertBox.className = "login-alert";
+                alertBox.textContent = "";
+
+                var usernameValid = validateField(username);
+                var passwordValid = validateField(password);
+                var valid = usernameValid && passwordValid;
+                if (!valid) {
+                    return;
+                }
+
+                setLoading(true);
+
+                fetch(tokenUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: "grant_type=password&username=" + encodeURIComponent(username.value.trim()) +
+                        "&password=" + encodeURIComponent(password.value)
+                })
+                    .then(function (response) {
+                        return response.json().then(function (data) {
+                            if (!response.ok) {
+                                throw new Error(data.error_description || "Unable to sign in with these credentials.");
+                            }
+                            return data;
+                        });
+                    })
+                    .then(function (data) {
+                        localStorage.setItem("salesRollAccessToken", data.access_token);
+                        if (rememberMe.checked) {
+                            localStorage.setItem("salesRollUsername", username.value.trim());
+                        } else {
+                            localStorage.removeItem("salesRollUsername");
+                        }
+
+                        alertBox.textContent = "Sign in successful. Redirecting...";
+                        alertBox.className = "login-alert is-success";
+                        window.setTimeout(function () { window.location.href = swaggerUrl; }, 500);
+                    })
+                    .catch(function (error) {
+                        alertBox.textContent = error.message;
+                        alertBox.className = "login-alert is-error";
+                        setLoading(false);
+                    });
+            });
+
+            [username, password].forEach(function (field) {
+                field.addEventListener("input", function () {
+                    validateField(field);
+                });
+            });
+
+            function validateField(field) {
+                var isValid = field.value.trim().length > 0;
+                field.closest(".field-group").classList.toggle("has-error", !isValid);
+                return isValid;
+            }
+
+            function setLoading(loading) {
+                submitButton.disabled = loading;
+                submitButton.classList.toggle("is-loading", loading);
+                username.disabled = loading;
+                password.disabled = loading;
+            }
+        }());
+    </script>
+</body>
+</html>

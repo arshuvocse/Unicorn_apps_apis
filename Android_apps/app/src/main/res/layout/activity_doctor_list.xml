@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/masterLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_doctor_form_screen"
+    android:orientation="vertical"
+    tools:context=".Activity.Doctor.DoctorListActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar_custom"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@drawable/bg_doctor_form_toolbar"
+        android:elevation="12dp"
+        android:paddingEnd="8dp"
+        app:navigationIcon="@drawable/ic_arrow_back_white_24"
+        app:theme="@style/ToolbarThemeMainColor">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/toolbar_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:fontFamily="@font/lato_bold"
+                android:text="@string/select_doctor"
+                android:textColor="@color/white"
+                android:textSize="21sp" />
+
+            <ImageView
+                android:id="@+id/cfilter"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:contentDescription="Filter doctors"
+                android:focusable="true"
+                android:padding="8dp"
+                android:src="@drawable/ic_filter_white" />
+        </RelativeLayout>
+    </androidx.appcompat.widget.Toolbar>
+
+    <EditText
+        android:id="@+id/searchEd"
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginEnd="12dp"
+        android:background="@drawable/bg_doctor_form_field"
+        android:drawableStart="@drawable/ic_search_24"
+        android:drawablePadding="10dp"
+        android:fontFamily="@font/latoregular"
+        android:hint="@string/tag_search_doctor"
+        android:paddingStart="15dp"
+        android:paddingEnd="15dp"
+        android:singleLine="true"
+        android:textColor="@color/black"
+        android:textColorHint="#6F8094"
+        android:textSize="15sp"
+        android:windowSoftInputMode="stateHidden|adjustResize" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="12dp"
+        android:background="@drawable/bg_doctor_detail_panel"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="9dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/lato_bold"
+            android:text="@string/tag_total_count"
+            android:textColor="#24364B"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/docCountTxt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/lato_bold"
+            android:textColor="#0B56A5"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="4dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingTop="3dp"
+        android:paddingBottom="20dp"
+        android:scrollbars="none" />
+</LinearLayout>

@@ -1,0 +1,220 @@
+package com.creatrix.unicorn.Presenter;
+
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.util.Log;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+
+import com.creatrix.unicorn.DBAdapter.DBCrudHelper;
+import com.creatrix.unicorn.DBAdapter.DBDoctor.DBDoctorHelper;
+import com.creatrix.unicorn.DBAdapter.ProductSQLiteHelper;
+import com.creatrix.unicorn.Interface.IDCR;
+import com.creatrix.unicorn.Model.DcrSM;
+import com.creatrix.unicorn.Model.ResultInfo;
+import com.creatrix.unicorn.Model.TourTypeViewModel;
+import com.creatrix.unicorn.Model.UserByRole;
+import com.creatrix.unicorn.Model.UserRole;
+import com.creatrix.unicorn.Network.ApiDoctorCall;
+import com.creatrix.unicorn.Network.RetrofitClientInstance;
+import com.creatrix.unicorn.Services.Constants;
+
+import java.net.SocketTimeoutException;
+import java.util.List;
+
+import okhttp3.HttpUrl;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class DCRPresenter implements IDCR.Presenter {
+    IDCR.View view;
+    Context context;
+    DBCrudHelper dbCrudHelper;
+    ProductSQLiteHelper phelper;
+    DBDoctorHelper dhelper;
+
+    public DCRPresenter(IDCR.View view,Context context) {
+        this.view = view;
+        this.context = context;
+
+        dbCrudHelper=new DBCrudHelper(context);
+        phelper=new ProductSQLiteHelper(context);
+        dhelper=new DBDoctorHelper(context);
+    }
+
+    @Override
+    public void GetVisitType() {
+        try{
+            view.OnVisitTypeGet(dhelper.getVisitTypeIdListFromSQLite());
+
+        }catch (Exception ex){
+        }
+    }
+
+    @Override
+    public void GetChamber(int doctorId) {
+        try{
+            view.OnChamberGet(dhelper.getChamberIdListFromSQLite(doctorId));
+
+        }catch (Exception ex){
+        }
+
+    }
+      @Override
+    public void GetCustomerChamber(int doctorId) {
+        try{
+            view.OnChamberGet(dhelper.getCustomerChamberIdListFromSQLite(doctorId));
+
+        }catch (Exception ex){
+        }
+
+    }
+
+    @Override
+    public void GetGiftProduct(String empId) {
+        try{
+            view.OnGiftProductGet(phelper.getProductGiftFromDB());
+
+        }catch (Exception ex){
+        }
+
+    }
+
+    @Override
+    public void GetBrand() {
+        try{
+            view.OnDoctorBrandGet(dhelper.getBrandListForDcrFromSQLite());
+
+        }catch (Exception ex){
+        }
+    }
+
+    @Override
+    public void SaveDCR(DcrSM aInfo) {
+        ProgressDialog progressDoalog = new ProgressDialog(context);
+        String visitType = "DCR";
+        if ("ccrAdapter".equalsIgnoreCase(aInfo.getType())) {
+            visitType = "CVR";
+        }
+
+        progressDoalog.setMessage(visitType+" is Saving.... Please wait");
+        progressDoalog.show();
+        progressDoalog.setCanceledOnTouchOutside(false);
+        try{
+            ApiDoctorCall service = RetrofitClientInstance.getRetrofitInstance().create(ApiDoctorCall.class);
+            Call<ResultInfo> call = service.SaveDcr(aInfo);
+            call.enqueue(new Callback<ResultInfo>() {
+                @Override
+                public void onResponse(@NonNull Call<ResultInfo> call, @NonNull Response<ResultInfo> response) {
+                    progressDoalog.dismiss();
+                    ResultInfo info =response.body();
+                    if(info !=null){
+                        if(info.getSuccess() == true){
+                            view.OnDcrSaveSuccess("Successfully Submitted");
+                        }else if(info.getValiCheck()==true)
+                        {
+                            view.OnDcrSaveSuccess("Insufficient");
+                        }
+                        else {
+                           // view.OnDcrSaveError("Some error occurred... Please try again");
+                            Toast.makeText(context, "Already Added!l", Toast.LENGTH_SHORT).show();
+                        }
+
+                    }else{
+                        view.OnDcrSaveError("Some error occurred..Please try again");
+
+                    }
+
+                }
+                @Override
+                public void onFailure(@NonNull Call<ResultInfo> call, @NonNull Throwable t) {
+                    progressDoalog.dismiss();
+                    if(t instanceof SocketTimeoutException){
+                        view.OnDcrSaveError("Slow Internet Detected..Please try again");
+
+                    }else{
+                        view.OnDcrSaveError("Failed to submit..Please try again");
+                    }
+                }
+            });
+
+        }catch (Exception ex){
+            progressDoalog.dismiss();
+            String str = ex.toString();
+            Log.e("Exception",str);
+            view.OnDcrSaveError("Exception occurred :"+str);
+
+        }
+    }
+
+    @Override
+    public void GetUserRole() {
+        try{
+            view.onUserRoleGet(dhelper.getRoleListFromSQLite());
+
+        }catch (Exception ex){
+        }
+       /* try{
+
+            ApiDoctorCall service = RetrofitClientInstance.getRetrofitInstance().create(ApiDoctorCall.class);
+            Call<List<UserRole>> call = service.GetUserRole();
+            call.enqueue(new Callback<List<UserRole>>() {
+                @Override
+                public void onResponse(Call<List<UserRole>> call, Response<List<UserRole>> response) {
+                    view.onUserRoleGet(response.body());
+                }
+                @Override
+                public void onFailure(Call<List<UserRole>> call, Throwable t) {
+                    if(t instanceof SocketTimeoutException){
+                    }else{
+                    }
+                }
+            });
+
+        }catch (Exception ex){
+        }*/
+    }
+
+    @Override
+    public void GetUserByRoleId(int roleid/*, int empId*/) {
+        try{
+            view.onUserGet(dhelper.getRolewiseUser(roleid));
+
+        }catch (Exception ex){
+        }
+       /* try{
+            ApiDoctorCall service = RetrofitClientInstance.getRetrofitInstance().create(ApiDoctorCall.class);
+            Call<List<UserByRole>> call = service.GetUserRoleByRoleId(id,empId);
+            HttpUrl ds = call.request().url();
+
+            call.enqueue(new Callback<List<UserByRole>>() {
+                @Override
+                public void onResponse(Call<List<UserByRole>> call, Response<List<UserByRole>> response) {
+                    view.onUserGet(response.body());
+                }
+                @Override
+                public void onFailure(Call<List<UserByRole>> call, Throwable t) {
+                    if(t instanceof SocketTimeoutException){
+                    }else{
+                    }
+                }
+            });
+
+        }catch (Exception ex){
+        }*/
+
+    }
+
+    @Override
+    public void GetNoneffective() {
+        try {
+            view.onNoneffectiveGet(dbCrudHelper.getNoneffective_SQLite());
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
+
+}

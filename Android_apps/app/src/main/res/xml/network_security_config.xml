@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- এখানে আপনার ডোমেইন লিখুন -->
+        <domain includeSubdomains="true">203.31.169.147</domain>
+        <domain includeSubdomains="true">103.244.247.93</domain>
+        <domain includeSubdomains="true">104.215.157.203</domain>
+    </domain-config>
+</network-security-config>

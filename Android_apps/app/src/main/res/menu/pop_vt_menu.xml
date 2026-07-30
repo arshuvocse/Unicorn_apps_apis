@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/navigation_location_tracking"
+        android:icon="@drawable/ic_location_tracking"
+        android:title="@string/location_tracking"
+        app:cnb_textColor="@color/white"
+        app:cnb_iconColor="@color/white"
+        app:cnb_backgroundColor="@color/main"
+        />
+</menu>

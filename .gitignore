@@ -1,0 +1,28 @@
+# Android
+.gradle/
+build/
+**/build/
+local.properties
+*.jks
+*.keystore
+.idea/
+*.iml
+*.apk
+*.ap_
+captures/
+
+# Visual Studio / .NET / C#
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# System / OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.log
