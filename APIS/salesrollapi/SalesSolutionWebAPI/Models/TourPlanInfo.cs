@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -793,5 +793,14 @@ public class TourPlanViewModel
         public string isSuccess { get; set; }
 
         public List<TourPlanInfoMasterDao> aTourPlanInfo { get; set; }
+    }
+
+    public class DayWiseTourPlanDTO
+    {
+        public int EmpInfoId { get; set; }
+        public string TourPlanDate { get; set; }
+        public bool IsFinalSubmit { get; set; } = true;
+        public List<int> CustomerIds { get; set; } = new List<int>();
+        public List<int> DoctorIds { get; set; } = new List<int>();
     }
 }

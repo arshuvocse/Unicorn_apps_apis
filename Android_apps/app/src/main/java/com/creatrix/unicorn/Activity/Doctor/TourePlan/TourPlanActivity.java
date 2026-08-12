@@ -66,41 +66,8 @@ public class TourPlanActivity extends AppCompatActivity implements Rcv_TourPlanL
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityTourPlan2Binding.inflate(getLayoutInflater());
-        //setContentView(R.layout.activity_tour_plan2);
-        setContentView(binding.getRoot());
-        session = new SessionManagement(getApplicationContext());
-        HashMap<String, String> user = session.getUserDetails();
-        empId = Integer.parseInt(user.get(SessionManagement.KEY_EmpId));
-        tppresenter = new TourPlanPresenter(this, TourPlanActivity.this);
-        progressDoalog = new ProgressDialog(TourPlanActivity.this);
-        binding.toolbarCustom.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
-
-        binding.refresh.setOnClickListener(view ->CallMasterApi(empId));
-        CallMasterApi(empId);
-        binding.statusClick.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int monthValue = binding.monthSpinner.getSelectedItemPosition();
-                String monthTxt = binding.monthSpinner.getSelectedItem().toString();
-                Integer year = Integer.parseInt(binding.yearSpinner.getSelectedItem().toString());
-                Bundle args = new Bundle();
-                args.putInt("empId", empId);
-                args.putInt("monthValue", (monthValue + 1));
-                args.putInt("year", year);
-                args.putInt("tourCount", tourCount);
-                args.putString("monthTxt", monthTxt);
-
-                TourStatusBottomSheetDialog bottomSheetDialog = new TourStatusBottomSheetDialog();
-                bottomSheetDialog.setArguments(args);
-                bottomSheetDialog.show(getSupportFragmentManager(), "TourBottomSheetStatus");
-            }
-        });
+        startActivity(new android.content.Intent(this, DayWiseTourPlanActivity.class));
+        finish();
     }
 
     private void CallMasterApi(int empid) {

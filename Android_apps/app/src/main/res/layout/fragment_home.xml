@@ -1219,36 +1219,41 @@
                                 </LinearLayout>
                             </androidx.cardview.widget.CardView>
 
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:orientation="horizontal"
+                            android:weightSum="2">
+
                             <androidx.cardview.widget.CardView
-                                android:id="@+id/dashboardTrainingCard"
+                                android:id="@+id/dashboardTourPlanCard"
                                 android:layout_width="0dp"
-                                android:layout_height="110dp"
-                                android:layout_marginStart="4dp"
+                                android:layout_height="80dp"
+                                android:layout_marginStart="10dp"
                                 android:layout_marginTop="7dp"
-                                android:layout_marginEnd="10dp"
-                                android:layout_marginBottom="10dp"
+                                android:layout_marginEnd="4dp"
+                                android:layout_marginBottom="7dp"
                                 android:layout_weight="1"
+                                android:clickable="true"
                                 android:elevation="5dp"
-                                android:visibility="gone"
+                                android:focusable="true"
+                                android:foreground="?android:attr/selectableItemBackground"
                                 card_view:cardCornerRadius="8dp">
 
                                 <LinearLayout
-                                    android:id="@+id/clickTraining"
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
-                                    android:layout_weight="1"
-                                    android:background="@drawable/bg_dashboard_card_purple_glossy"
-                                    android:clickable="true"
-                                    android:elevation="2sp"
-                                    android:focusable="true"
-                                    android:foreground="?android:attr/selectableItemBackground"
+                                    android:background="@drawable/bg_dashboard_card_teal_glossy"
                                     android:gravity="center"
                                     android:orientation="vertical">
 
                                     <ImageView
-                                        android:layout_width="46dp"
-                                        android:layout_height="46dp"
-                                        android:src="@drawable/training" />
+                                        android:layout_width="34dp"
+                                        android:layout_height="34dp"
+                                        android:src="@drawable/ic_calendar" />
 
                                     <TextView
                                         android:layout_width="wrap_content"
@@ -1256,13 +1261,31 @@
                                         android:fontFamily="@font/latoregular"
                                         android:gravity="center"
                                         android:padding="5dp"
-                                        android:paddingLeft="5sp"
-                                        android:text="@string/training"
+                                        android:text="Tour Plan"
                                         android:textColor="@color/black"
-                                        android:textSize="14sp" />
+                                        android:textSize="12sp" />
 
                                 </LinearLayout>
                             </androidx.cardview.widget.CardView>
+
+                            <androidx.cardview.widget.CardView
+                                android:id="@+id/dashboardTrainingCard"
+                                android:layout_width="0dp"
+                                android:layout_height="0dp"
+                                android:visibility="gone"
+                                card_view:cardCornerRadius="8dp">
+
+                                <LinearLayout
+                                    android:id="@+id/clickTraining"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:orientation="vertical" />
+                            </androidx.cardview.widget.CardView>
+
+                            <View
+                                android:layout_width="0dp"
+                                android:layout_height="80dp"
+                                android:layout_weight="1" />
 
                         </LinearLayout>
 

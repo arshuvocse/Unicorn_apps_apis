@@ -137,7 +137,7 @@ public class CustomerListActivity extends AppCompatActivity implements ICustomer
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-
+                binding.clearSearch.setVisibility(s.length() > 0 ? View.VISIBLE : View.GONE);
             }
 
             @Override
@@ -146,6 +146,7 @@ public class CustomerListActivity extends AppCompatActivity implements ICustomer
 
             }
         });
+        binding.clearSearch.setOnClickListener(v -> binding.searchCustomer.setText(""));
     }
 
     private void openFilter() {
@@ -284,18 +285,24 @@ public class CustomerListActivity extends AppCompatActivity implements ICustomer
         });
     }
 
-    private void filter(String customerName) {
+    private void filter(String keyword) {
         try {
             if (customerArrayList != null) {
 
+                String query = keyword.trim().toLowerCase();
                 ArrayList<Customer> arrayList = new ArrayList<>();
                 for (Customer item : customerArrayList) {
-                    if ((item.getCustomerName().toLowerCase().contains(customerName.toLowerCase()) || (item.getCustomerCode().contains(customerName)))) {
+                    if (contains(item.getCustomerName(), query)
+                            || contains(item.getCustomerCode(), query)
+                            || contains(item.getAddress(), query)
+                            || contains(item.getCellNo(), query)
+                            || contains(item.getCustomerType(), query)) {
                         arrayList.add(item);
                     }
                 }
 
                 mAdapter.filterList(arrayList);
+                binding.count.setText(String.valueOf(arrayList.size()));
 
             }
 
@@ -303,6 +310,10 @@ public class CustomerListActivity extends AppCompatActivity implements ICustomer
             exception.printStackTrace();
         }
 
+    }
+
+    private boolean contains(String value, String query) {
+        return value != null && value.toLowerCase().contains(query);
     }
 
     public void OnSuccessz(List<Customer> aList, String orderTYpe) {

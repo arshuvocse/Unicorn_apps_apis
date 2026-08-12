@@ -1,4 +1,4 @@
-﻿using SalesSolutionWebAPI.DataManager;
+using SalesSolutionWebAPI.DataManager;
 using SalesSolutionWebAPI.Models;
 using System;
 using System.Collections.Generic;
@@ -3043,6 +3043,44 @@ namespace SalesSolutionWebAPI.Repository
                 accessManager.SqlConnectionClose();
             }
 
+        }
+
+        public ResultInfo SaveDayWiseTourPlan(DayWiseTourPlanDTO req)
+        {
+            ResultInfo result = new ResultInfo();
+            try
+            {
+                accessManager.SqlConnectionOpen(DataBase.SalesDisDB);
+                List<SqlParameter> gSqlParameterList = new List<SqlParameter>();
+                gSqlParameterList.Add(new SqlParameter("@EmpInfoId", req.EmpInfoId));
+                gSqlParameterList.Add(new SqlParameter("@TourPlanDate", req.TourPlanDate));
+                gSqlParameterList.Add(new SqlParameter("@IsFinalSubmit", req.IsFinalSubmit));
+                gSqlParameterList.Add(new SqlParameter("@CustomerIds", req.CustomerIds != null ? string.Join(",", req.CustomerIds) : ""));
+                gSqlParameterList.Add(new SqlParameter("@DoctorIds", req.DoctorIds != null ? string.Join(",", req.DoctorIds) : ""));
+
+                DataTable dt = accessManager.GetDataTable("sp_Webapi_Save_DayWiseTourPlan", gSqlParameterList);
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    result.isSuccess = Convert.ToInt32(dt.Rows[0]["IsSuccess"]) == 1;
+                    result.ErrorMessage = dt.Rows[0]["Message"].ToString();
+                }
+                else
+                {
+                    result.isSuccess = true;
+                    result.ErrorMessage = "Day-wise Tour Plan saved.";
+                }
+            }
+            catch (Exception ex)
+            {
+                accessManager.SqlConnectionClose(true);
+                result.isSuccess = false;
+                result.ErrorMessage = ex.Message;
+            }
+            finally
+            {
+                accessManager.SqlConnectionClose();
+            }
+            return result;
         }
 
 

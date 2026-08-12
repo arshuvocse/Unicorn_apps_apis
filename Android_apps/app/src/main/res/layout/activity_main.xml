@@ -28,6 +28,55 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- Floating Background Capsule Vector Icons -->
+        <ImageView
+            android:id="@+id/bgCapsule1"
+            android:layout_width="95dp"
+            android:layout_height="95dp"
+            android:layout_marginStart="-25dp"
+            android:layout_marginTop="25dp"
+            android:alpha="0.12"
+            android:rotation="-30"
+            android:src="@drawable/ic_capsule_vector"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/bgCapsule2"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:layout_marginTop="140dp"
+            android:layout_marginEnd="8dp"
+            android:alpha="0.10"
+            android:rotation="40"
+            android:src="@drawable/ic_capsule_vector"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/bgCapsule3"
+            android:layout_width="110dp"
+            android:layout_height="110dp"
+            android:layout_marginStart="-30dp"
+            android:layout_marginBottom="80dp"
+            android:alpha="0.08"
+            android:rotation="15"
+            android:src="@drawable/ic_capsule_vector"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <ImageView
+            android:id="@+id/bgCapsule4"
+            android:layout_width="85dp"
+            android:layout_height="85dp"
+            android:layout_marginEnd="-20dp"
+            android:layout_marginBottom="15dp"
+            android:alpha="0.12"
+            android:rotation="-55"
+            android:src="@drawable/ic_capsule_vector"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
         <ImageView
             android:id="@+id/loginLogo"
             android:layout_width="210dp"

@@ -29,6 +29,11 @@ public class _Mio_OrderList_recyclerAdapter extends RecyclerView.Adapter<_Mio_Or
         this.aCustomerList = customerList;
     }
 
+    public void filterList(List<OrderViewModel> filteredList) {
+        this.aCustomerList = filteredList;
+        notifyDataSetChanged();
+    }
+
     @Override
     public _Mio_OrderList_recyclerAdapter.BookViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())

@@ -276,11 +276,12 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
                             mpresenter.GetAreaLocal(0);
                             break;
                         case "DZSM":
-                            viewBinding.regiondiv.setVisibility(View.VISIBLE);
+                            viewBinding.regiondiv.setVisibility(View.GONE);
                             viewBinding.areadiv.setVisibility(View.VISIBLE);
                             mpresenter.GetRegionLocal(0);
                             break;
                     }
+                    viewBinding.regiondiv.setVisibility(View.GONE);
                     viewBinding.doctorTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                         @Override
                         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {

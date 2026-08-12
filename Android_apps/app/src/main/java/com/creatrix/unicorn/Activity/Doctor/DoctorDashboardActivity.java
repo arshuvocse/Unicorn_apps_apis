@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.creatrix.unicorn.Activity.Doctor.AddDoctor.DoctorActivity;
+import com.creatrix.unicorn.Activity.Doctor.TourePlan.DayWiseTourPlanActivity;
 import com.creatrix.unicorn.Activity.Doctor.VisitPlan.VisitPlanActivity;
 import com.creatrix.unicorn.Interface.IMioDashboard;
 import com.creatrix.unicorn.Interface.IPendingCounter;
@@ -98,12 +99,11 @@ public class DoctorDashboardActivity extends AppCompatActivity implements IPendi
             }
         });*/
 
+        viewBinding.DoctorVisitPlan.setVisibility(View.VISIBLE);
         viewBinding.DoctorVisitPlan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Intent i = new Intent(DoctorDashboardActivity.this, DoctorTourPlanActivity.class);
-                //Intent i = new Intent(DoctorDashboardActivity.this, DoctorVisitPlanAC.class);
-                Intent i = new Intent(DoctorDashboardActivity.this, VisitPlanActivity.class);
+                Intent i = new Intent(DoctorDashboardActivity.this, DayWiseTourPlanActivity.class);
                 startActivity(i);
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
             }

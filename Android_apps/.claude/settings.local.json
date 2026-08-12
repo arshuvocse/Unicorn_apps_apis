@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk 'BEGIN{o=0;c=0} {n=gsub\\(/{/,\"{\"\\);o+=n; n=gsub\\(/}/,\"}\"\\);c+=n} END{print \"open=\"o, \"close=\"c}' app/src/main/java/com/creatrix/unicorn/Activity/SyncFromServerAc.java)",
+      "Bash(awk 'BEGIN{o=0;c=0} {n=gsub\\(/{/,\"{\"\\);o+=n; n=gsub\\(/}/,\"}\"\\);c+=n} END{print \"open=\"o, \"close=\"c}' app/src/main/java/com/creatrix/unicorn/DBAdapter/SyncDb_Helper.java)",
+      "Bash(awk ' *)",
+      "Bash(./gradlew compileDebugJavaWithJavac --console=plain)",
+      "Bash(./gradlew.bat :app:compileDebugJavaWithJavac -q)"
+    ]
+  }
+}

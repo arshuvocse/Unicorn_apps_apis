@@ -9,6 +9,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Build;
@@ -50,12 +51,14 @@ public class LocationService extends Service {
         @Override
         public void onLocationResult(@NonNull LocationResult locationResult) {
             super.onLocationResult(locationResult);
-            locationResult.getLastLocation();
-            double latitude = locationResult.getLastLocation().getLatitude();
-            double longitude = locationResult.getLastLocation().getLongitude();
-            UpdateLocationData(latitude, longitude);
+            if (locationResult.getLastLocation() != null) {
+                double latitude = locationResult.getLastLocation().getLatitude();
+                double longitude = locationResult.getLastLocation().getLongitude();
+                UpdateLocationData(latitude, longitude);
+            }
         }
     };
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -63,6 +66,10 @@ public class LocationService extends Service {
     }
 
     public static void start(Context context) {
+        if (!LocationAccess.hasRequiredPermissions(context) || !LocationAccess.isLocationEnabled(context)) {
+            Log.w(TAG, "Cannot start LocationService: missing permissions or location disabled");
+            return;
+        }
         Intent intent = new Intent(context, LocationService.class);
         intent.setAction(Constants.ACTION_START_LOCATION_SERVICE);
         try {
@@ -77,10 +84,16 @@ public class LocationService extends Service {
     }
 
     private void startLocationService() {
+        if (!LocationAccess.hasRequiredPermissions(this) || !LocationAccess.isLocationEnabled(this)) {
+            Log.w(TAG, "Location permissions not granted or location disabled. Stopping service.");
+            stopSelf();
+            return;
+        }
+
         String channelId = "location_notification_channel";
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         Intent resultIntent = new Intent();
-        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, resultIntent, PendingIntent.FLAG_IMMUTABLE |PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, resultIntent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(
                 getApplicationContext(), channelId
         );
@@ -101,35 +114,52 @@ public class LocationService extends Service {
                 notificationManager.createNotificationChannel(notificationChannel);
             }
         }
-        startForeground(Constants.LOCATION_SERVICE_ID, builder.build());
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(Constants.LOCATION_SERVICE_ID, builder.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
+            } else {
+                startForeground(Constants.LOCATION_SERVICE_ID, builder.build());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to start foreground location service", e);
+            stopSelf();
+            return;
+        }
 
         LocationRequest locationRequest = new LocationRequest();
-       // locationRequest.setInterval(300000);
         locationRequest.setInterval(300000);
         locationRequest.setFastestInterval(180000);
         locationRequest.setSmallestDisplacement(10.2f);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        if (!LocationAccess.hasRequiredPermissions(this) || !LocationAccess.isLocationEnabled(this)) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
+
+        try {
+            LocationServices.getFusedLocationProviderClient(this)
+                    .requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+        } catch (SecurityException e) {
+            Log.e(TAG, "Missing location permissions for location updates", e);
+            stopSelf();
         }
-        LocationServices.getFusedLocationProviderClient(this)
-                .requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
     }
-    private void stopLocationService(){
-        LocationServices.getFusedLocationProviderClient(this)
-                .removeLocationUpdates(locationCallback);
+
+    private void stopLocationService() {
+        try {
+            LocationServices.getFusedLocationProviderClient(this)
+                    .removeLocationUpdates(locationCallback);
+        } catch (Exception e) {
+            Log.e(TAG, "Error removing location updates", e);
+        }
         stopForeground(true);
         stopSelf();
     }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (!LocationAccess.hasRequiredPermissions(this) || !LocationAccess.isLocationEnabled(this)) {
+            Log.w(TAG, "Location permissions not granted or location disabled in onStartCommand. Stopping service.");
+            stopSelf();
+            return START_NOT_STICKY;
+        }
         if(intent !=null){
             String action = intent.getAction();
             if(action !=null){

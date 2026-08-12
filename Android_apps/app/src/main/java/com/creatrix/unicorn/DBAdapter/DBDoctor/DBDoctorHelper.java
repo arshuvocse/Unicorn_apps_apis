@@ -257,31 +257,49 @@ public class DBDoctorHelper {
         String docQuery = "Select * from tblDoctorInfo";
 
         try {
-            Cursor cursor;
-            cursor = database.rawQuery(docQuery, null);
-            if (cursor.getCount() > 0) {
+            Cursor cursor = database.rawQuery(docQuery, null);
+            if (cursor != null && cursor.getCount() > 0) {
+                int colDoctorId = cursor.getColumnIndex("DoctorId");
+                int colDoctorName = cursor.getColumnIndex("DoctorName");
+                int colDoctorCode = cursor.getColumnIndex("DoctorCode");
+                int colChemberName = cursor.getColumnIndex("ChemberName");
+                int colDocContact = cursor.getColumnIndex("DocContact");
+                int colDocTPDetailsId = cursor.getColumnIndex("DocTPDetailsId");
+                int colDoctorTypeName = cursor.getColumnIndex("DoctorTypeName");
+                int colProgramTypeName = cursor.getColumnIndex("ProgramTypeName");
+                int colMarketName = cursor.getColumnIndex("MarketName");
+                int colMarketCode = cursor.getColumnIndex("MarketCode");
+                int colLatitude = cursor.getColumnIndex("Latitude");
+                int colLongitude = cursor.getColumnIndex("Longitude");
+                int colStreetAddress = cursor.getColumnIndex("StreetAddress");
+
                 while (cursor.moveToNext()) {
                     DoctorListViewModel ddInfo = new DoctorListViewModel();
-                    ddInfo.setDoctorId(cursor.getInt(cursor.getColumnIndex("DoctorId")));
-                    ddInfo.setDoctorName(cursor.getString(cursor.getColumnIndex("DoctorName")));
-                    ddInfo.setDoctorCode(cursor.getString(cursor.getColumnIndex("DoctorCode")));
-                    ddInfo.setChemberName(cursor.getString(cursor.getColumnIndex("ChemberName")));
-                    ddInfo.setDocContact(cursor.getString(cursor.getColumnIndex("DocContact")));
-                    ddInfo.setDocTPDetailsId(cursor.getInt(cursor.getColumnIndex("DocTPDetailsId")));
-                    ddInfo.setDoctorTypeName(cursor.getString(cursor.getColumnIndex("DoctorTypeName")));
-                    ddInfo.setProgramTypeName(cursor.getString(cursor.getColumnIndex("ProgramTypeName")));
-                    ddInfo.setMarketName(cursor.getString(cursor.getColumnIndex("MarketName")));
-                    ddInfo.setMarketCode(cursor.getString(cursor.getColumnIndex("MarketCode")));
-                    ddInfo.setLatitude(cursor.getString(cursor.getColumnIndex("Latitude")));
-                    ddInfo.setLongitude(cursor.getString(cursor.getColumnIndex("Longitude")));
-                    ddInfo.setStreetAddress(cursor.getString(cursor.getColumnIndex("StreetAddress")));
+                    if (colDoctorId != -1) ddInfo.setDoctorId(cursor.getInt(colDoctorId));
+                    if (colDoctorName != -1) ddInfo.setDoctorName(cursor.getString(colDoctorName));
+                    if (colDoctorCode != -1) ddInfo.setDoctorCode(cursor.getString(colDoctorCode));
+                    if (colChemberName != -1) ddInfo.setChemberName(cursor.getString(colChemberName));
+                    if (colDocContact != -1) ddInfo.setDocContact(cursor.getString(colDocContact));
+                    if (colDocTPDetailsId != -1) ddInfo.setDocTPDetailsId(cursor.getInt(colDocTPDetailsId));
+                    if (colDoctorTypeName != -1) ddInfo.setDoctorTypeName(cursor.getString(colDoctorTypeName));
+                    if (colProgramTypeName != -1) ddInfo.setProgramTypeName(cursor.getString(colProgramTypeName));
+                    if (colMarketName != -1) ddInfo.setMarketName(cursor.getString(colMarketName));
+                    if (colMarketCode != -1) ddInfo.setMarketCode(cursor.getString(colMarketCode));
+                    if (colLatitude != -1) ddInfo.setLatitude(cursor.getString(colLatitude));
+                    if (colLongitude != -1) ddInfo.setLongitude(cursor.getString(colLongitude));
+                    if (colStreetAddress != -1) ddInfo.setStreetAddress(cursor.getString(colStreetAddress));
                     docList.add(ddInfo);
                 }
+                cursor.close();
             }
 
         } catch (Exception exception) {
             Log.e("DoctorDetails", exception.toString());
             exception.printStackTrace();
+        }
+
+        if (docList.isEmpty()) {
+            return getCustDoctorListFromSQLite("Doc");
         }
         return docList;
     }

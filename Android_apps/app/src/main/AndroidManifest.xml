@@ -362,6 +362,9 @@
             android:name=".Activity.Doctor.TourePlan.TourPlanActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".Activity.Doctor.TourePlan.DayWiseTourPlanActivity"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".Activity.Doctor.DCR.AddDCRActivity"
             android:screenOrientation="portrait" />
         <activity

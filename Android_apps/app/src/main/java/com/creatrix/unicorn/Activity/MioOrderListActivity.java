@@ -2,6 +2,8 @@ package com.creatrix.unicorn.Activity;
 
 import android.app.ProgressDialog;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -60,6 +62,9 @@ public class MioOrderListActivity extends AppCompatActivity implements IMarketSt
     FilterMasterBinding ftm;
     int selectedGrpId, selectedZoneId, selectedAreaId, selectedTeriId, selectedSTeriId, selectedMarketId;
     String status;
+    private List<OrderViewModel> masterOrderList = new ArrayList<>();
+    private _Mio_OrderList_recyclerAdapter mAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,6 +97,24 @@ public class MioOrderListActivity extends AppCompatActivity implements IMarketSt
         openFilter();
         binding.toolbarCustom.setNavigationOnClickListener(v -> finish());
         binding.filter.setOnClickListener(v -> bsheetdlg.show());
+
+        binding.searchOrder.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                binding.clearSearch.setVisibility(s.length() > 0 ? View.VISIBLE : View.GONE);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                filter(s.toString());
+            }
+        });
+        binding.clearSearch.setOnClickListener(v -> binding.searchOrder.setText(""));
 
     }
 
@@ -139,8 +162,9 @@ public class MioOrderListActivity extends AppCompatActivity implements IMarketSt
     public void LoadRecycler(List<OrderViewModel> aList) {
 
         if (aList != null ) {
+            masterOrderList = aList;
             binding.count.setText(String.valueOf(aList.size()));
-            _Mio_OrderList_recyclerAdapter mAdapter = new _Mio_OrderList_recyclerAdapter(aList);
+            mAdapter = new _Mio_OrderList_recyclerAdapter(aList);
             RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
             binding.recyclerView.setLayoutManager(mLayoutManager);
             binding.recyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -148,14 +172,65 @@ public class MioOrderListActivity extends AppCompatActivity implements IMarketSt
             binding.recyclerView.setItemAnimator(null);
             binding.recyclerView.scrollToPosition(0);
             mAdapter.notifyDataSetChanged();
-        } /*else {
-            SnackBarManagement._success_CustomMessage(binding.mainmaster, "No Order Available");
-            int size = aList.size();
-            aList.clear();
-            mAdapter.notifyItemRangeRemoved(0,size);
 
-        }*/
+            if (binding.searchOrder.getText() != null && !binding.searchOrder.getText().toString().isEmpty()) {
+                filter(binding.searchOrder.getText().toString());
+            }
+        } else {
+            masterOrderList = new ArrayList<>();
+            binding.count.setText("0");
+            if (mAdapter != null) {
+                mAdapter.filterList(new ArrayList<>());
+            }
+        }
 
+    }
+
+    private void filter(String keyword) {
+        try {
+            if (masterOrderList != null) {
+                String query = keyword.trim().toLowerCase();
+                List<OrderViewModel> filteredList = new ArrayList<>();
+                double totalNet = 0;
+
+                for (OrderViewModel item : masterOrderList) {
+                    if (contains(item.getOrderCode(), query)
+                            || contains(item.getCustomerName(), query)
+                            || contains(item.getCustomerType(), query)
+                            || contains(item.getCreatedBy(), query)
+                            || contains(item.getCreatedAt(), query)
+                            || contains(item.getOrderStatus(), query)
+                            || contains(item.getApprovalStatus(), query)
+                            || contains(item.getGrossValue(), query)
+                            || contains(item.getOrderType(), query)
+                            || contains(item.getMIOName(), query)
+                            || contains(item.getSubmissionDate(), query)) {
+                        filteredList.add(item);
+                        if (item.getGrossValue() != null && !item.getGrossValue().isEmpty()) {
+                            try {
+                                totalNet += Double.parseDouble(item.getGrossValue());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+
+                if (mAdapter != null) {
+                    mAdapter.filterList(filteredList);
+                }
+                binding.count.setText(String.valueOf(filteredList.size()));
+                if (!query.isEmpty()) {
+                    binding.rvAmount.setText(String.format(Locale.getDefault(), "%.2f", totalNet));
+                }
+            }
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    private boolean contains(String value, String query) {
+        return value != null && value.toLowerCase().contains(query);
     }
 
     private void openFilter() {
@@ -166,7 +241,8 @@ public class MioOrderListActivity extends AppCompatActivity implements IMarketSt
         bsheetdlg.setCanceledOnTouchOutside(true);
         //mkpresenter.GetGroupLocal();
         ftm.filterStatusLayout.linearLayout.setVisibility(VISIBLE);
-        ftm.filterMarketLayout.marketStructure.setVisibility(VISIBLE);
+        ftm.filterMarketLayout.marketStructure.setVisibility(GONE);
+        ftm.filterMarketLayout.divMarket.setVisibility(GONE);
 
         ftm.linearLayoutemp.setVisibility(GONE);
         ftm.filterTypeLayout.tilDoctype.setVisibility(View.GONE);
@@ -200,6 +276,8 @@ public class MioOrderListActivity extends AppCompatActivity implements IMarketSt
                 ftm.filterMarketLayout.divGroup.setVisibility(GONE);
                 ftm.filterMarketLayout.divRegion.setVisibility(GONE);
                 ftm.filterMarketLayout.divArea.setVisibility(GONE);
+                ftm.filterMarketLayout.divTeritorry.setVisibility(GONE);
+                ftm.filterMarketLayout.divSteritory.setVisibility(GONE);
                 mkpresenter.GetTeritoryLocal(0);
                 /*ftm.filterMarketLayout.territorySpinner.setVisibility(View.VISIBLE);
                 ftm.filterMarketLayout.sterritorySpinner.setVisibility(View.VISIBLE);
@@ -208,6 +286,9 @@ public class MioOrderListActivity extends AppCompatActivity implements IMarketSt
             case "AM":
                 ftm.filterMarketLayout.divGroup.setVisibility(GONE);
                 ftm.filterMarketLayout.divRegion.setVisibility(GONE);
+                ftm.filterMarketLayout.divArea.setVisibility(GONE);
+                ftm.filterMarketLayout.divTeritorry.setVisibility(GONE);
+                ftm.filterMarketLayout.divSteritory.setVisibility(GONE);
                 mkpresenter.GetAreaLocal(0);
                 /*ftm.filterMarketLayout.areaSpinner.setVisibility(View.VISIBLE);
                 ftm.filterMarketLayout.territorySpinner.setVisibility(View.VISIBLE);
@@ -216,6 +297,10 @@ public class MioOrderListActivity extends AppCompatActivity implements IMarketSt
                 break;
             case "DZSM":
                 ftm.filterMarketLayout.divGroup.setVisibility(GONE);
+                ftm.filterMarketLayout.divRegion.setVisibility(GONE);
+                ftm.filterMarketLayout.divArea.setVisibility(GONE);
+                ftm.filterMarketLayout.divTeritorry.setVisibility(GONE);
+                ftm.filterMarketLayout.divSteritory.setVisibility(GONE);
                 mkpresenter.GetRegionLocal(0);
                /* ftm.filterMarketLayout.divRegion.setVisibility(VISIBLE);
                 ftm.filterMarketLayout.divArea.setVisibility(VISIBLE);
@@ -225,15 +310,20 @@ public class MioOrderListActivity extends AppCompatActivity implements IMarketSt
                 break;
             case "NSM":
             case "Admin":
-                ftm.filterMarketLayout.divGroup.setVisibility(VISIBLE);
-                ftm.filterMarketLayout.divRegion.setVisibility(VISIBLE);
-                ftm.filterMarketLayout.divArea.setVisibility(VISIBLE);
-                ftm.filterMarketLayout.divTeritorry.setVisibility(VISIBLE);
-                ftm.filterMarketLayout.divSteritory.setVisibility(VISIBLE);
-                ftm.filterMarketLayout.divMarket.setVisibility(VISIBLE);
+                ftm.filterMarketLayout.divGroup.setVisibility(GONE);
+                ftm.filterMarketLayout.divRegion.setVisibility(GONE);
+                ftm.filterMarketLayout.divArea.setVisibility(GONE);
+                ftm.filterMarketLayout.divTeritorry.setVisibility(GONE);
+                ftm.filterMarketLayout.divSteritory.setVisibility(GONE);
+                ftm.filterMarketLayout.divMarket.setVisibility(GONE);
                 mkpresenter.GetGroupLocal();
                 break;
         }
+        ftm.filterMarketLayout.divRegion.setVisibility(GONE);
+        ftm.filterMarketLayout.divArea.setVisibility(GONE);
+        ftm.filterMarketLayout.divTeritorry.setVisibility(GONE);
+        ftm.filterMarketLayout.divSteritory.setVisibility(GONE);
+        ftm.filterMarketLayout.divMarket.setVisibility(GONE);
         // ftm.filterMarketLayout.areaSpinner.setVisibility(View.GONE);
         ftm.filterMonthYearLayout.txtFromDate.setText(today);
         ftm.filterMonthYearLayout.txtToDate.setText(today);

@@ -26,6 +26,7 @@ import com.creatrix.unicorn.Activity.Customer.CustomerEditListActivity;
 import com.creatrix.unicorn.Activity.Customer.CustomerListActivity;
 import com.creatrix.unicorn.Activity.Doctor.AddDoctor.DoctorActivity;
 import com.creatrix.unicorn.Activity.Doctor.DoctorListActivity;
+import com.creatrix.unicorn.Activity.Doctor.TourePlan.DayWiseTourPlanActivity;
 import com.creatrix.unicorn.Activity.Doctor.Prescription.AddPrescriptionActivity;
 import com.creatrix.unicorn.Activity.Leave.LeaveActivity;
 import com.creatrix.unicorn.Activity.MileageClaim.AddMileageClaimActivity;
@@ -208,6 +209,7 @@ public class HomeFragment extends Fragment implements IProduct.View, IMioDashboa
                 break;
         }
         hideDisabledDashboardItems();
+        viewBinding.dashboardTourPlanCard.setVisibility(View.VISIBLE);
         viewBinding.userName.setText(userName);
         // sqlite intialization
         productSQLiteHelper = new ProductSQLiteHelper(getContext());
@@ -285,6 +287,11 @@ public class HomeFragment extends Fragment implements IProduct.View, IMioDashboa
             } else {
                 SnackBarManagement._warning_CustomMessage(viewBinding.masterLayout, "No Internet Connectivity");
             }
+        });
+        viewBinding.dashboardTourPlanCard.setOnClickListener(v -> {
+            Intent i = new Intent(requireActivity(), DayWiseTourPlanActivity.class);
+            startActivity(i);
+            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         });
         viewBinding.clickTraining.setOnClickListener(v -> {
             if (NetworkInformation.isConnected(requireActivity())) {

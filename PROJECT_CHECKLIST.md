@@ -11,9 +11,9 @@
 Goal: Allow AI to work directly with SQL Server.
 
 Tasks:
-- [ ] Install SQL MCP
-- [ ] Connect SQL Server
-- [ ] Verify database connection
+- [x] Install SQL MCP
+- [x] Connect SQL Server
+- [x] Verify database connection
 - [ ] Test SELECT, INSERT, UPDATE, DELETE
 - [ ] Read Stored Procedures
 - [ ] Execute Stored Procedures
@@ -24,7 +24,7 @@ Tasks:
 Goal: Allow AI to manage Docker.
 
 Tasks:
-- [ ] Install Docker MCP
+- [x] Install Docker MCP
 - [ ] Connect Docker Engine
 - [ ] List Containers
 - [ ] Start Container
@@ -39,7 +39,7 @@ Tasks:
 Goal: Make AI remember the project.
 
 Tasks:
-- [ ] Install Memory MCP
+- [x] Install Memory MCP
 - [ ] Store Project Information
 - [ ] Store Coding Rules
 - [ ] Store Folder Structure
@@ -51,10 +51,10 @@ Tasks:
 Goal: Enable step-by-step reasoning.
 
 Tasks:
-- [ ] Install Sequential Thinking MCP
-- [ ] Enable Planning
-- [ ] Enable Task Breakdown
-- [ ] Enable Multi-step Reasoning
+- [x] Install Sequential Thinking MCP
+- [x] Enable Planning
+- [x] Enable Task Breakdown
+- [x] Enable Multi-step Reasoning
 
 ---
 

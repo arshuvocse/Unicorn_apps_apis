@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using SalesSolutionWebAPI.Models;
 using SalesSolutionWebAPI.Repository;
 using System;
@@ -81,65 +81,25 @@ namespace SalesSolutionWebAPI.Controllers
             return Json(json);
         }
 
-        [HttpGet]
-        [Route("api/TourPlan/GetPurpose")]
-        public IHttpActionResult Get_TourPlanPurpose(int empId)
-        {
-            DataTable dt = aDal.Get_TourPlanPurpose(empId);
-            string JSONresult;
-            JSONresult = JsonConvert.SerializeObject(dt);
-            dynamic json = JsonConvert.DeserializeObject(JSONresult);
-            return Json(json);
-        }
-
-        [HttpGet]
-        [Route("api/TourPlan/GetPurposeForMarketVisit")]
-        public IHttpActionResult Get_TourPlanPurposeForMarketVisit(int empId)
-        {
-            DataTable dt = aDal.Get_TourPlanPurposeForMarketVisit(empId);
-            string JSONresult;
-            JSONresult = JsonConvert.SerializeObject(dt);
-            dynamic json = JsonConvert.DeserializeObject(JSONresult);
-            return Json(json);
-        }
-
-        [HttpGet]
-        [Route("api/TourPlan/GetPurposeForOtherVisit")]
-        public IHttpActionResult Get_TourPlanPurposeForOtherVisit(int empId)
-        {
-            DataTable dt = aDal.Get_TourPlanPurposeForOtherVisit(empId);
-            string JSONresult;
-            JSONresult = JsonConvert.SerializeObject(dt);
-            dynamic json = JsonConvert.DeserializeObject(JSONresult);
-            return Json(json);
-        }
-
         [HttpPost]
-        
         [Route("api/TourPlan/SaveTourPlanList")]
         public IHttpActionResult AddTourPlan(TourPlanInfoMaster ainfo)
         {
             return Json(aDal.AddTourPlan(ainfo));
         }
 
-        
-
         [HttpPost]
-        
         [Route("api/TourPlan/SaveTourPlanList_vThree")]
         public IHttpActionResult SaveTourPlanList_vThree(TourPlanInfoMasterDAO ainfo)
         {
             return Json(aDal.SaveTourPlanList_vThree(ainfo));
         }
 
-
-
         [HttpPost]
-        
-        [Route("api/TourPlan/SaveTourPlanListNew")]
-        public IHttpActionResult AddTourPlanNew(TourPlanInfoMaster ainfo)
+        [Route("api/TourPlan/SaveDayWiseTourPlan")]
+        public IHttpActionResult SaveDayWiseTourPlan(DayWiseTourPlanDTO req)
         {
-            return Json(aDal.AddTourPlanNew(ainfo));
+            return Json(aDal.SaveDayWiseTourPlan(req));
         }
 
         [HttpGet]
