@@ -1,6 +1,7 @@
 package com.creatrix.unicorn.Activity.Doctor.DCR;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -10,14 +11,20 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.IntentSenderRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -47,6 +54,9 @@ import com.creatrix.unicorn.RecyclerAdapter._VisitedWithRecylcer;
 import com.creatrix.unicorn.RecyclerAdapter._product_brandAdapter;
 import com.creatrix.unicorn.RecyclerAdapter._product_giftAdapter;
 import com.creatrix.unicorn.Services.Constants;
+import com.creatrix.unicorn.UtilityHelper.DateTimeUtil;
+import com.creatrix.unicorn.UtilityHelper.LocationGuard;
+import android.widget.Toast;
 import com.creatrix.unicorn.UtilityHelper.NetworkInformation;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
@@ -56,6 +66,9 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.Priority;
+import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.gson.Gson;
 
 import java.text.SimpleDateFormat;
@@ -96,6 +109,9 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
 
     List<TourTypeViewModel> aTourTypeLIst;
     List<DoctorChamberName> aChamberList;
+    boolean isCvrFlow = false;
+    // DCR or CVR ("ccrAdapter") sent to the server; a pending (offline) entry keeps the type it was saved with.
+    String visitType;
 
     List<UserByRole> aVisitedList = new ArrayList<>();
     String empId, roletypeid, entryTime, empName, empCode;
@@ -103,6 +119,7 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
     int dcrLocalId;
     String edit_dName;
     String lat, lon, setStreetAddress;
+    android.location.Location lastFix;
     LocationManager locationManager;
     int giftQty, giftID;
 
@@ -110,30 +127,49 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
         @Override
         public void onLocationResult(@NonNull LocationResult locationResult) {
             super.onLocationResult(locationResult);
-
-            if (locationResult == null) return;
-
             android.location.Location loc = locationResult.getLastLocation();
             if (loc == null) return; // can be null on first hit or if provider cold-starts
-
-            double latitude = loc.getLatitude();
-            double longitude = loc.getLongitude();
-
-            // Defensive: get address may throw or be slow; wrap it
-            try {
-                setStreetAddress = getCompleteAddressString(latitude, longitude);
-            } catch (Exception ignored) {
-                // keep going even if reverse-geocode fails
-            }
-
-            lat = String.valueOf(latitude);
-            lon = String.valueOf(longitude);
-
-            if (binding != null && binding.latlon != null) {
-                binding.latlon.setText(lat + "," + lon);
-            }
+            applyLocation(loc);
         }
     };
+
+    private void applyLocation(android.location.Location loc) {
+        double latitude = loc.getLatitude();
+        double longitude = loc.getLongitude();
+        lastFix = loc;
+
+        // Set the coordinates first so a slow/failed reverse-geocode can't leave them empty.
+        lat = String.valueOf(latitude);
+        lon = String.valueOf(longitude);
+        if (binding != null && binding.latlon != null) {
+            binding.latlon.setText(lat + "," + lon);
+        }
+
+        try {
+            setStreetAddress = getCompleteAddressString(latitude, longitude);
+        } catch (Exception ignored) {
+            // keep going even if reverse-geocode fails
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        // Start fetching as soon as the user grants location (previously nothing happened until a manual retry).
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            getCLocation();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        try {
+            LocationServices.getFusedLocationProviderClient(this).removeLocationUpdates(locationCallback);
+        } catch (Exception ignored) { }
+        super.onDestroy();
+    }
+
     private void navigateHome() {
         Intent i = new Intent(AddDCRActivity.this, DoctorListActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -155,6 +191,21 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
         setContentView(binding.getRoot());
         dbCrudHelper = new DBCrudHelper(AddDCRActivity.this);
         binding.toolbarCustom.setNavigationOnClickListener(v -> navigateHome());
+
+        binding.rgShift.setOnCheckedChangeListener((group, checkedId) -> applyChamberShiftFilter());
+        binding.chamberSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                updateChamberInfoSection();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                binding.chamberInfoSection.setVisibility(View.GONE);
+            }
+        });
+
+        binding.chamberLocationBtn.setOnClickListener(v -> saveChamberLocation());
 
         //imgaeView = findViewById(R.id.imgaeView);
         presenter = new DCRPresenter(this, this);
@@ -183,6 +234,7 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
 
         Gson gson = new Gson();
         DoctorListViewModel aInfoData = gson.fromJson(getIntent().getStringExtra("myjson"), DoctorListViewModel.class);
+        visitType = Constants.WHO;
         switch (Constants.WHO) {
             case "PendingDcrAdapter":
                 DcrSM pData = gson.fromJson(getIntent().getStringExtra("dcrDtails"), DcrSM.class);
@@ -191,7 +243,16 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
                 //  binding.visitedWithAdd.setVisibility(View.GONE);
                 //   binding.giftAdd.setVisibility(View.GONE);
                 presenter.GetVisitType();
-                presenter.GetChamber(aInfoData.getDoctorId());
+                if ("ccrAdapter".equals(pData.getType())) {
+                    visitType = "ccrAdapter";
+                    isCvrFlow = true;
+                    binding.rgShift.setVisibility(View.GONE);
+                    binding.chamberInfoSection.setVisibility(View.GONE);
+                    binding.toolbarTitle.setText("Add CVR");
+                    presenter.GetCustomerChamber(aInfoData.getDoctorId());
+                } else {
+                    presenter.GetChamber(aInfoData.getDoctorId());
+                }
                 presenter.GetBrand();
 
                 if (pData.getVisitTypeName() != null) {
@@ -201,6 +262,7 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
                 }
                 if (pData.getDoclist().getChemberName() != null) {
                     edit_dName = pData.getDoclist().getChemberName();
+                    preselectShiftForEdit(edit_dName);
                     binding.chamberSpinner.setSelection(getIndex(binding.chamberSpinner, edit_dName));
                 } else {
                 }
@@ -271,7 +333,7 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
 
                 break;
             case "DoclitAdapter":
-                binding.dcrdate.setText(new SimpleDateFormat("dd-MMM-yyyy hh:mm a", Locale.getDefault()).format(new Date()));
+                binding.dcrdate.setText(DateTimeUtil.getDisplayDateTime());
                 try {
                     presenter.GetVisitType();
                     presenter.GetChamber(aInfoData.getDoctorId());
@@ -285,7 +347,7 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
                 }
                 break;
             case "ToDayDoclitAdapter":
-                binding.dcrdate.setText(new SimpleDateFormat("dd-MMM-yyyy hh:mm a", Locale.getDefault()).format(new Date()));
+                binding.dcrdate.setText(DateTimeUtil.getDisplayDateTime());
                 try {
                     presenter.GetVisitType();
                     presenter.GetChamber(aInfoData.getDoctorId());
@@ -300,8 +362,11 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
                 break;
             case "ccrAdapter":
 
+                isCvrFlow = true;
+                binding.rgShift.setVisibility(View.GONE);
+                binding.chamberInfoSection.setVisibility(View.GONE);
                 binding.toolbarTitle.setText("Add CVR");
-            binding.dcrdate.setText(new SimpleDateFormat("dd-MMM-yyyy hh:mm a", Locale.getDefault()).format(new Date()));
+            binding.dcrdate.setText(DateTimeUtil.getDisplayDateTime());
                 try {
                     presenter.GetVisitType();
                     presenter.GetCustomerChamber(aInfoData.getDoctorId());
@@ -327,7 +392,7 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
         binding.brandAdd.setOnClickListener(v -> showDialog_Brand());
         binding.visitedWithAdd.setOnClickListener(v -> presenter.GetUserRole());
 
-        entryTime = new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date());
+        entryTime = new SimpleDateFormat("hh:mm a", Locale.US).format(new Date());
 
         binding.latlon.setText(lat + "," + lon);
         binding.submitbtnClick.setOnClickListener(v -> {
@@ -341,16 +406,73 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
             SubmitDCR(aInfoData, empId);
         });
         binding.location.setOnClickListener(view -> {
-            binding.latlon.setText("Loading...");
+            binding.latlon.setText("Fetching location...");
+            getCLocation();
+        });
+        binding.latlon.setOnClickListener(view -> {
+            binding.latlon.setText("Fetching location...");
             getCLocation();
         });
 
         try {
-            binding.latlon.setText("Loading...");
+            binding.latlon.setText("Fetching location...");
             getCLocation();
-        }catch (Exception e){
+        } catch (Exception e){
 
         }
+        askLocationAccuracy();
+    }
+
+    // Both re-fetch the location once the user comes back from the system dialog / WiFi panel.
+    private final ActivityResultLauncher<IntentSenderRequest> accuracyLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartIntentSenderForResult(), result -> {
+                getCLocation();
+                askWifiOn();
+            });
+    private final ActivityResultLauncher<Intent> wifiLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), result -> getCLocation());
+
+    /** Android's own dialog asks the user to turn on Google Location Accuracy (GPS + WiFi + mobile network). */
+    private void askLocationAccuracy() {
+        LocationSettingsRequest request = new LocationSettingsRequest.Builder()
+                .addLocationRequest(new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000L).build())
+                .setAlwaysShow(true)
+                .build();
+        LocationServices.getSettingsClient(this).checkLocationSettings(request)
+                .addOnSuccessListener(response -> askWifiOn())
+                .addOnFailureListener(error -> {
+                    if (error instanceof ResolvableApiException) {
+                        try {
+                            accuracyLauncher.launch(new IntentSenderRequest.Builder(
+                                    ((ResolvableApiException) error).getResolution()).build());
+                            return;
+                        } catch (RuntimeException ignored) {
+                            // no resolution screen on this device; WiFi still helps
+                        }
+                    }
+                    askWifiOn();
+                });
+    }
+
+    /** WiFi (even unconnected) gives a far better fix indoors; asks first, then opens the WiFi panel. */
+    private void askWifiOn() {
+        if (isFinishing() || isDestroyed()) return;
+        WifiManager wifi = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        if (wifi == null || wifi.isWifiEnabled() || wifi.isScanAlwaysAvailable()) return;
+        new AlertDialog.Builder(this)
+                .setTitle("Turn on WiFi")
+                .setMessage("WiFi helps find your location inside a hospital or chamber. You do not need to connect to any network.")
+                .setPositiveButton("Turn on", (d, w) -> {
+                    try {
+                        wifiLauncher.launch(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+                                ? new Intent(Settings.Panel.ACTION_WIFI)
+                                : new Intent(Settings.ACTION_WIFI_SETTINGS));
+                    } catch (ActivityNotFoundException ignored) {
+                        // no WiFi settings screen; the location still works without it
+                    }
+                })
+                .setNegativeButton("Not now", null)
+                .show();
     }
 
     private void checkLocationPermission() {
@@ -436,88 +558,17 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
                 return;
             }
 
-            final FusedLocationProviderClient fused =
-                    LocationServices.getFusedLocationProviderClient(this);
-
-            // ---- Build requests without try/catch re-assignment ----
-            final boolean hasBuilder; // play-services-location 21+?
-            boolean hasBuilder1;
-            try {
-                Class.forName("com.google.android.gms.location.LocationRequest$Builder");
-                hasBuilder1 = true;
-            } catch (Throwable t) {
-                hasBuilder1 = false;
-            }
-
-            hasBuilder = hasBuilder1;
-            final LocationRequest oneShotReq;
-            final LocationRequest longReq;
-
-            if (hasBuilder) {
-                // ✅ New API
-                oneShotReq = new LocationRequest.Builder(10_000L) // 10s window
-                        .setMinUpdateIntervalMillis(5_000L)
-                        .setMaxUpdates(1)
-                        .setWaitForAccurateLocation(true)
-                        .setPriority(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY)
-                        .build();
-
-                longReq = new LocationRequest.Builder(300_000L)   // 5 min
-                        .setMinUpdateIntervalMillis(180_000L)      // 3 min fastest
-                        .setMinUpdateDistanceMeters(10.2f)
-                        .setPriority(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY)
-                        .build();
-            } else {
-                // ✅ Legacy API
-                LocationRequest r1 = LocationRequest.create();
-                r1.setInterval(10_000L);
-                r1.setFastestInterval(5_000L);
-                r1.setNumUpdates(1);
-                r1.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-                oneShotReq = r1;
-
-                LocationRequest r2 = LocationRequest.create();
-                r2.setInterval(300_000L);
-                r2.setFastestInterval(180_000L);
-                r2.setSmallestDisplacement(10.2f);
-                r2.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-                longReq = r2;
-            }
-
-            // ---- STEP 1: Try last known (instant) ----
-            fused.getLastLocation()
-                    .addOnSuccessListener(loc -> {
-                        boolean usedLast = false;
-                        if (loc != null) {
-                            long ageMs = Math.abs(System.currentTimeMillis() - loc.getTime()); // fresh?
-                            if (ageMs <= 2 * 60 * 1000) { // <= 2 min
-                                double latitude = loc.getLatitude();
-                                double longitude = loc.getLongitude();
-
-                                try { setStreetAddress = getCompleteAddressString(latitude, longitude); } catch (Exception ignored) { }
-                                lat = String.valueOf(latitude);
-                                lon = String.valueOf(longitude);
-                                if (binding != null && binding.latlon != null) {
-                                    binding.latlon.setText(lat + "," + lon);
-                                }
-                                usedLast = true;
-                            }
-                        }
-
-                        // ---- STEP 2: If last not usable, request a fast one-shot fix ----
-                        if (!usedLast) {
-                            try { fused.requestLocationUpdates(oneShotReq, locationCallback, Looper.getMainLooper()); } catch (Exception ignored) { }
-                        }
-
-                        // ---- STEP 3: Start continuous background updates (your existing callback) ----
-                        try { fused.requestLocationUpdates(longReq, locationCallback, Looper.getMainLooper()); } catch (Exception ignored) { }
-                    })
-                    .addOnFailureListener(e -> {
-                        // If last known failed, still try one-shot + continuous
-                        try { fused.requestLocationUpdates(oneShotReq, locationCallback, Looper.getMainLooper()); } catch (Exception ignored) { }
-                        try { fused.requestLocationUpdates(longReq,    locationCallback, Looper.getMainLooper()); } catch (Exception ignored) { }
-                    });
-
+            // Multi-tier location: Fused cache → live Fused/Network → IP geolocation fallback (indoors).
+            LocationGuard.requestFix(this, (location, error) -> {
+                if (isFinishing() || isDestroyed()) return;
+                if (location != null) {
+                    applyLocation(location);
+                } else if (error != null && lastFix == null) {
+                    if (binding != null && binding.latlon != null) {
+                        binding.latlon.setText("Location not found. Tap the location button to retry.");
+                    }
+                }
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -713,11 +764,134 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
         try {
             if (aInfo != null) {
                 aChamberList = aInfo;
-                ArrayAdapter<DoctorChamberName> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, aInfo);
-                dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                binding.chamberSpinner.setAdapter(dataAdapter);
-
+                applyChamberShiftFilter();
             }
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    /**
+     * Filters the loaded chamber list by the selected Morning/Evening shift and repopulates
+     * the spinner. Chambers without a saved Shift (older entries) are shown under either
+     * choice so they don't silently disappear. Not used for the CVR (customer) flow, which
+     * has no shift concept and keeps showing the full list.
+     */
+    private void applyChamberShiftFilter() {
+        try {
+            if (aChamberList == null) return;
+
+            if (isCvrFlow) {
+                setChamberSpinnerItems(aChamberList);
+                return;
+            }
+
+            int checkedId = binding.rgShift.getCheckedRadioButtonId();
+            if (checkedId == -1) {
+                setChamberSpinnerItems(new ArrayList<>());
+                return;
+            }
+
+            boolean wantEvening = checkedId == R.id.rb_evening;
+            List<DoctorChamberName> filtered = new ArrayList<>();
+            for (DoctorChamberName c : aChamberList) {
+                boolean hasShift = c.getShift() != null && !c.getShift().trim().isEmpty();
+                if (!hasShift || (wantEvening ? c.isEvening() : c.isMorning())) {
+                    filtered.add(c);
+                }
+            }
+            setChamberSpinnerItems(filtered);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    private void setChamberSpinnerItems(List<DoctorChamberName> aInfo) {
+        ArrayAdapter<DoctorChamberName> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, aInfo);
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        binding.chamberSpinner.setAdapter(dataAdapter);
+        updateChamberInfoSection();
+    }
+
+    // Map button shows only for a doctor chamber that still has no Lat/Lon (CVR customers have no chamber location)
+    private void showChamberLocationButton(DoctorChamberName chamber) {
+        boolean needsLocation = !isCvrFlow && chamber.getChemberId() > 0 && !chamber.hasLocation();
+        binding.chamberLocationBtn.setVisibility(needsLocation ? View.VISIBLE : View.GONE);
+    }
+
+    private void saveChamberLocation() {
+        Object selected = binding.chamberSpinner.getSelectedItem();
+        if (!(selected instanceof DoctorChamberName)) return;
+        DoctorChamberName chamber = (DoctorChamberName) selected;
+        binding.chamberLocationBtn.setEnabled(false);
+        LocationGuard.requestFix(this, (location, error) -> {
+            if (isFinishing() || isDestroyed()) return;
+            String fixError = location == null ? error : LocationGuard.checkFix(location);
+            if (fixError != null) {
+                binding.chamberLocationBtn.setEnabled(true);
+                Toast.makeText(this, fixError, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            presenter.SaveChamberLocation(chamber, String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
+        });
+    }
+
+    @Override
+    public void OnChamberLocationSaved(DoctorChamberName chamber, String lat, String lon) {
+        chamber.setLat(lat);
+        chamber.setLon(lon);
+        binding.chamberLocationBtn.setEnabled(true);
+        updateChamberInfoSection();
+        Toast.makeText(this, "Chamber location saved", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void OnChamberLocationError(String message) {
+        binding.chamberLocationBtn.setEnabled(true);
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    private void updateChamberInfoSection() {
+        try {
+            Object selected = binding.chamberSpinner.getSelectedItem();
+            if (!(selected instanceof DoctorChamberName)) {
+                binding.chamberInfoSection.setVisibility(View.GONE);
+                return;
+            }
+            DoctorChamberName chamber = (DoctorChamberName) selected;
+            String sittingTime = chamber.getSittingTime();
+            String address = chamber.getAddress();
+            boolean hasTime = sittingTime != null && !sittingTime.trim().isEmpty();
+            boolean hasAddress = address != null && !address.trim().isEmpty();
+
+            binding.chamberSittingTime.setVisibility(View.VISIBLE);
+            binding.chamberSittingTime.setText("Time: " + (hasTime ? sittingTime.trim() : "N/A"));
+
+            binding.chamberAddressTxt.setVisibility(View.VISIBLE);
+            binding.chamberAddressTxt.setText("Address: " + (hasAddress ? address.trim() : "N/A"));
+
+            binding.chamberInfoSection.setVisibility(View.VISIBLE);
+            showChamberLocationButton(chamber);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    /**
+     * Edit flow: a saved DCR only carries the chamber name, not its shift, so before
+     * restoring the spinner selection by name we check the matching radio button first -
+     * otherwise the shift filter would leave the spinner empty and the lookup would fail.
+     */
+    private void preselectShiftForEdit(String chamberName) {
+        try {
+            if (isCvrFlow || aChamberList == null || chamberName == null) return;
+            for (DoctorChamberName c : aChamberList) {
+                if (chamberName.equalsIgnoreCase(c.getChemberName())) {
+                    binding.rgShift.check(c.isEvening() ? R.id.rb_evening : R.id.rb_morning);
+                    return;
+                }
+            }
+            binding.rgShift.check(R.id.rb_morning);
         } catch (Exception exception) {
             exception.printStackTrace();
         }
@@ -889,17 +1063,23 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
                 dlvm.setDocContact(dvm.getDocContact());
                 dlvm.setDoctorTypeName(dvm.getDoctorTypeName());
                 dlvm.setChemberName(chamberName);
-                dlvm.setType(Constants.WHO);
+                dlvm.setType(visitType);
+                aInfo.setType(visitType);
                 dlvm.setProgramTypeName(dvm.getProgramTypeName());
 
                 aInfo.setDoclist(dlvm);
                 aInfo.setSessionUser(empId);
-                aInfo.setDcrDate(binding.dcrdate.getText().toString().trim());
+                aInfo.setDcrDate(binding.dcrdate.getText().toString().trim().replace("Sept", "Sep"));
                 aInfo.setEntryTime(entryTime);
                 aInfo.setVisitTypeId(visityTYpeId);
                 aInfo.setVisitTypeName(visityTYpeName);
                 aInfo.setTourPlanTypeId(visityTYpeId);
                 aInfo.setChamberId(chamberId);
+
+                int checkedShiftId = binding.rgShift.getCheckedRadioButtonId();
+                boolean isEvening = (checkedShiftId == R.id.rb_evening);
+                aInfo.setShift(isEvening ? "Evening" : "Morning");
+                aInfo.setIsMorning(isEvening ? "0" : "1");
 
                 aInfo.getDoclist().setDoctorName(chamberName);
                 //  aInfo.set(chamberId);
@@ -944,6 +1124,10 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
     }
 
     public void SubmitDCR(DoctorListViewModel dcrSM, String empId) {
+        SubmitDCR(dcrSM, empId, false);
+    }
+
+    private void SubmitDCR(DoctorListViewModel dcrSM, String empId, boolean fixRefreshed) {
         if (!IsValid()) {
             SnackBarManagement._error_CustomMessage(findViewById(android.R.id.content), "Please fill Date, Visit Type, Institute and Comment");
         } else {
@@ -958,22 +1142,50 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
 
 
             aInfo.setDoctorId(dcrSM.getDoctorId());
-            aInfo.setDcrDate(binding.dcrdate.getText().toString().trim());
+            aInfo.setDcrDate(binding.dcrdate.getText().toString().trim().replace("Sept", "Sep"));
             aInfo.setEntryTime(entryTime);
             aInfo.setTourPlanTypeId(visityTYpeId);
             aInfo.setDocTPDetailsId(dcrSM.getDocTPDetailsId());
             aInfo.setChamberId(chamberId);
+
+            int checkedShiftId = binding.rgShift.getCheckedRadioButtonId();
+            boolean isEvening = (checkedShiftId == R.id.rb_evening);
+            aInfo.setShift(isEvening ? "Evening" : "Morning");
+            aInfo.setIsMorning(isEvening ? "0" : "1");
+
             aInfo.setRemarks(binding.comment.getText().toString());
             aInfo.setSessionUser(empId);
             aInfo.setGiftList(new ArrayList<>());
             aInfo.setSampleList(new ArrayList<>());
             aInfo.setDoctorBrand(aBrandList);
             aInfo.setAempList(aVisitedList);
-            aInfo.setType(Constants.WHO);
-            aInfo.setEntryDate_Apps(binding.dcrdate.getText().toString().trim());
+            aInfo.setType(visitType);
+            aInfo.setEntryDate_Apps(binding.dcrdate.getText().toString().trim().replace("Sept", "Sep"));
 
-            if (lat == null && lon == null) {
-                SnackBarManagement._warning_CustomMessage(binding.masterLayoutId, "Your Location Not Getting.Try Again");
+            // Strict location rule: precise permission + GPS on + fresh, accurate, non-mock fix
+            // and (when the doctor has a saved location) the employee must be at the doctor.
+            String locationError = LocationGuard.checkEnvironment(this);
+            // Missing, stale (form took a while) or too coarse (indoors) fix: wait up to 20 s for a better
+            // one instead of blocking the submit, then check once more.
+            if (locationError == null && !fixRefreshed
+                    && LocationGuard.checkFix(lastFix, LocationGuard.DCR_MAX_ACCURACY_M) != null) {
+                SnackBarManagement._warning_CustomMessage(binding.masterLayoutId, "Getting an accurate location (up to 20 seconds)...");
+                binding.submitbtnClick.setEnabled(false);
+                LocationGuard.requestAccurateFix(this, LocationGuard.DCR_MAX_ACCURACY_M, 20_000L, (location, error) -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    binding.submitbtnClick.setEnabled(true);
+                    if (location != null) {
+                        applyLocation(location);
+                    }
+                    SubmitDCR(dcrSM, empId, true);
+                });
+                return;
+            }
+            if (locationError == null) {
+                locationError = LocationGuard.checkFix(lastFix, LocationGuard.DCR_MAX_ACCURACY_M);
+            }
+            if (locationError != null) {
+                SnackBarManagement._warning_CustomMessage(binding.masterLayoutId, locationError);
                 return;
             } else {
                 aInfo.setLatitude(lat);
@@ -1016,9 +1228,8 @@ public class AddDCRActivity extends AppCompatActivity implements LocationListene
 
         DoctorChamberName chamberVM;
         chamberVM = (DoctorChamberName) binding.chamberSpinner.getSelectedItem();
-        int chamberId = chamberVM.getChemberId();
 
-        if (chamberId == 0) {
+        if (chamberVM == null || chamberVM.getChemberId() == 0) {
             isVal = false;
         }
 

@@ -222,6 +222,13 @@ public class _attenApprovalAdapter extends RecyclerView.Adapter<_attenApprovalAd
                     }
                 }
             }
+            // DZSM (RoleTypeId 3) can approve/reject any item, whoever it is waiting on
+            if (RoleTypeId == 3) {
+                holder.approvepan.setVisibility(View.VISIBLE);
+                holder.approve.setVisibility(View.VISIBLE);
+                holder.View.setVisibility(View.VISIBLE);
+                holder.warnToast.setVisibility(View.GONE);
+            }
             holder.View.setOnClickListener(v -> {
 
                 Intent goto_viewAtten = new Intent(context, TeamAttenViewActivity.class);

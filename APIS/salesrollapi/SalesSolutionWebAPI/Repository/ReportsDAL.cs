@@ -493,7 +493,7 @@ namespace SalesSolutionWebAPI.Repository
 
         }
 
-        public  CWSRDAO  GetCustWiseOrderReportDAL(string Role, string empId, string Month, string Year, string type, string ProviderType, string CustomerType)
+        public  CWSRDAO  GetCustWiseOrderReportDAL(string Role, string empId, string Month, string Year, string type, string ProviderType, string CustomerType, string CustomerId = null)
         {
             try
             {
@@ -508,6 +508,8 @@ namespace SalesSolutionWebAPI.Repository
                 aSqlParameterlist.Add(new SqlParameter("@ProviderType", ProviderType ?? (object)DBNull.Value ?? (object)DBNull.Value));
 
                 aSqlParameterlist.Add(new SqlParameter("@CustomerType", CustomerType ?? (object)DBNull.Value ?? (object)DBNull.Value));
+                // empty / 0 = all customers
+                aSqlParameterlist.Add(new SqlParameter("@CustomerId", string.IsNullOrEmpty(CustomerId) || CustomerId == "0" ? (object)DBNull.Value : int.Parse(CustomerId)));
 
 
                 DataTable dt = new DataTable();
@@ -631,7 +633,7 @@ namespace SalesSolutionWebAPI.Repository
             }
         }
 
-            public  PWSRDAO GetProductWiseOrderReportDAL(string Role, string empId, string Month, string Year, string type, string ProviderType, string CustomerType)
+            public  PWSRDAO GetProductWiseOrderReportDAL(string Role, string empId, string Month, string Year, string type, string ProviderType, string CustomerType, string CustomerId = null)
         {
             try
             {
@@ -646,6 +648,8 @@ namespace SalesSolutionWebAPI.Repository
                 aSqlParameterlist.Add(new SqlParameter("@ProviderType", ProviderType ?? (object)DBNull.Value ?? (object)DBNull.Value));
 
                 aSqlParameterlist.Add(new SqlParameter("@CustomerType", CustomerType ?? (object)DBNull.Value ?? (object)DBNull.Value));
+                // empty / 0 = all customers
+                aSqlParameterlist.Add(new SqlParameter("@CustomerId", string.IsNullOrEmpty(CustomerId) || CustomerId == "0" ? (object)DBNull.Value : int.Parse(CustomerId)));
                 //DataTable dtDoctor = new DataTable();
                 DataTable dt = new DataTable();
                 if(type=="Order")
@@ -1000,6 +1004,49 @@ namespace SalesSolutionWebAPI.Repository
                 aSqlParameterlist.Add(new SqlParameter("@month", month));
                 aSqlParameterlist.Add(new SqlParameter("@year", year));
                 DataTable dt = accessManager.GetDataTable("sp_Webapi_Get_TargetVsAcchivementData", aSqlParameterlist);
+                return dt;
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+            finally
+            {
+                accessManager.SqlConnectionClose();
+            }
+        }
+
+        public DataTable GetTargetAchievementSubTerritory(int empId, int month, int year, int selectedEmpId = 0)
+        {
+            try
+            {
+                accessManager.SqlConnectionOpen(DataBase.SalesDisDB);
+                List<SqlParameter> aSqlParameterlist = new List<SqlParameter>();
+                aSqlParameterlist.Add(new SqlParameter("@empId", empId));
+                aSqlParameterlist.Add(new SqlParameter("@month", month));
+                aSqlParameterlist.Add(new SqlParameter("@year", year));
+                aSqlParameterlist.Add(new SqlParameter("@selectedEmpId", selectedEmpId));
+                return accessManager.GetDataTable("sp_WebAPI_Get_TargetAchievement_SubTerritory", aSqlParameterlist);
+            }
+            finally
+            {
+                accessManager.SqlConnectionClose();
+            }
+        }
+
+        public DataTable GetTourPlanReport(int empId, int selectedEmpId, string FromDt, string ToDt, int doctorId = 0, int customerId = 0)
+        {
+            try
+            {
+                accessManager.SqlConnectionOpen(DataBase.SalesDisDB);
+                List<SqlParameter> aSqlParameterlist = new List<SqlParameter>();
+                aSqlParameterlist.Add(new SqlParameter("@empId", empId));
+                aSqlParameterlist.Add(new SqlParameter("@selectedEmpId", selectedEmpId));
+                aSqlParameterlist.Add(new SqlParameter("@FromDt", FromDt ?? (object)DBNull.Value));
+                aSqlParameterlist.Add(new SqlParameter("@ToDt", ToDt ?? (object)DBNull.Value));
+                aSqlParameterlist.Add(new SqlParameter("@doctorId", doctorId));
+                aSqlParameterlist.Add(new SqlParameter("@customerId", customerId));
+                DataTable dt = accessManager.GetDataTable("sp_Webapi_Get_TourPlanReport", aSqlParameterlist);
                 return dt;
             }
             catch (Exception e)

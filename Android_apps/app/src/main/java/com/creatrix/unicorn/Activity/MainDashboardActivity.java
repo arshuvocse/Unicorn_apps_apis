@@ -30,6 +30,7 @@ import com.creatrix.unicorn.Activity.Fragment.MoreFragment;
 import com.creatrix.unicorn.Activity.Fragment.ReportFragment;
 import com.creatrix.unicorn.DBAdapter.DBCrudHelper;
 import com.creatrix.unicorn.DBAdapter.SyncDb_Helper;
+import com.creatrix.unicorn.Services.SyncCheckWorker;
 import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.UtilityHelper.LocationAccess;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
@@ -69,6 +70,14 @@ public class MainDashboardActivity extends AppCompatActivity {
         String empId = user.get(SessionManagement.KEY_EmpId);
         syncDb_helper = new SyncDb_Helper(this);
         dbCrudHelper = new DBCrudHelper(this);
+
+        // Lightweight background check: only re-syncs Customer/Doctor lists when the
+        // server-side count actually differs from what's stored locally.
+        try {
+            SyncCheckWorker.schedule(getApplicationContext());
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
         //TODO:
       /*  if(!syncDb_helper.CheckDataInTable("tblInitTable")){
             try {

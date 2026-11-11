@@ -125,8 +125,8 @@ public class _TourInfoData_List extends RecyclerView.Adapter<_TourInfoData_List.
             try {
                 String mystring = UtilityHelper._GetCurrentDate();
                 String dsd = nList.get(position).getTourPlanDate();
-                Date cDate = new SimpleDateFormat("dd-MMM-yyyy", Locale.ENGLISH).parse(mystring);
-                Date dDate = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(nList.get(position).getTourPlanDate());
+                Date cDate = new SimpleDateFormat("dd-MMM-yyyy", Locale.US).parse(mystring.replace("Sept", "Sep"));
+                Date dDate = new SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(nList.get(position).getTourPlanDate());
 
                 Calendar crntDate = Calendar.getInstance();
                 Calendar dbDate = Calendar.getInstance();

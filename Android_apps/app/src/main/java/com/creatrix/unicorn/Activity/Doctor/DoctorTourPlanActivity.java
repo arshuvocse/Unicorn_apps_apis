@@ -29,6 +29,7 @@ import com.creatrix.unicorn.Network.RetrofitClientInstance;
 import com.creatrix.unicorn.NormalAdapter.DoctorTourStatusBottomSheetDialog;
 import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.RecyclerAdapter._doctorMonthSelectRecyclerAdapter;
+import com.creatrix.unicorn.UtilityHelper.DateTimeUtil;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 
 import java.net.SocketTimeoutException;
@@ -37,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 import okhttp3.HttpUrl;
 import retrofit2.Call;
@@ -193,7 +195,6 @@ public class DoctorTourPlanActivity extends AppCompatActivity implements Rcv_Tou
         List<MonthDate> aMondateList = new ArrayList<>();
         SimpleDateFormat dateV = new SimpleDateFormat("dd");
         SimpleDateFormat nameV = new SimpleDateFormat("EEE");
-        SimpleDateFormat fmt2 = new SimpleDateFormat("EEE, dd MMM");
         SimpleDateFormat fmt2d = new SimpleDateFormat("yyyy-MM-dd");
         Calendar cal = Calendar.getInstance();
         cal.clear();
@@ -202,7 +203,7 @@ public class DoctorTourPlanActivity extends AppCompatActivity implements Rcv_Tou
 
         for (int i = 0; i < daysInMonth; i++) {
             MonthDate monthDate = new MonthDate();
-            monthDate.setMonthName(fmt2.format(cal.getTime()));
+            monthDate.setMonthName(DateTimeUtil.getFormattedDate("EEE, dd MMM", cal.getTime()));
             monthDate.setDateValue(fmt2d.format(cal.getTime()));
             monthDate.setDateV(Integer.parseInt(dateV.format(cal.getTime())));
             monthDate.setMonthV(month + 1);

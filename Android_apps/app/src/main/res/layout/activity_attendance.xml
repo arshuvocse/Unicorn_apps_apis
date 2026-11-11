@@ -160,6 +160,19 @@
                         android:textSize="14sp"
                         tools:text="Out 18:00:00" />
                 </LinearLayout>
+
+                <TextView
+                    android:id="@+id/punchWindowText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="@font/lato"
+                    android:gravity="center"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:text="Punch-in allowed 08:00 - 10:00"
+                    tools:visibility="visible" />
             </LinearLayout>
 
             <Button

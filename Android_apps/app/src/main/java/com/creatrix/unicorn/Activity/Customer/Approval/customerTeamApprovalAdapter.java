@@ -154,7 +154,8 @@ public class customerTeamApprovalAdapter extends RecyclerView.Adapter<customerTe
                     }
                 }
             }
-
+            // DZSM (RoleTypeId 3) can approve/reject any item, whoever it is waiting on
+            if (RoleTypeId == 3) holder.tv_approve.setVisibility(View.VISIBLE);
 
             holder.tv_approve.setOnClickListener(v -> {
                 click.approvalTcust(elt);

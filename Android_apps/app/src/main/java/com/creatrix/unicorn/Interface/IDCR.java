@@ -24,6 +24,7 @@ public interface IDCR {
         void GetUserRole();
         void GetUserByRoleId(int roleid/*,int empId*/);
         void GetNoneffective();
+        void SaveChamberLocation(DoctorChamberName chamber, String lat, String lon);
     }
 
     interface View{
@@ -37,5 +38,7 @@ public interface IDCR {
         void onUserRoleGet(List<UserRole> aList);
         void onUserGet(List<UserByRole> aList);
         void onNoneffectiveGet(List<NonEffectiveReason> aList);
+        void OnChamberLocationSaved(DoctorChamberName chamber, String lat, String lon);
+        void OnChamberLocationError(String message);
     }
 }

@@ -7,9 +7,11 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import com.creatrix.unicorn.Setting.AppSetting;
+
 public class RetrofitClientInstanceIntegration {
 
-    private static final String BASE_URL = "http://103.244.247.93:217/";
+    private static final String BASE_URL = AppSetting.newBASE_URL;
     private static Retrofit retrofit = null;
 
     public static Retrofit getRetrofitInstance() {

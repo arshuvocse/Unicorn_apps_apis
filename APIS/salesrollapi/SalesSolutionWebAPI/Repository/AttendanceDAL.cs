@@ -734,13 +734,42 @@ namespace SalesSolutionWebAPI.Repository
             {
 
                 accessManager.SqlConnectionOpen(DataBase.SalesDisDB);
+
+                // Punch-in time restriction (punch-out is never restricted).
+                if (atten.AttType == 1)
+                {
+                    // Own connection: a failed SP closes and poisons its DataAccessManager for the save below.
+                    DataTable dtWindow = null;
+                    DataAccessManager windowDb = new DataAccessManager();
+                    try
+                    {
+                        windowDb.SqlConnectionOpen(DataBase.SalesDisDB);
+                        dtWindow = windowDb.GetDataTable("sp_Webapi_Get_AttendancePunchWindow",
+                            new List<SqlParameter> { new SqlParameter("@empId", atten.EmpInfoId) });
+                    }
+                    catch (SqlException)
+                    {
+                        // attendance_punch_window.sql not run on this DB yet: no window, never block punch-in
+                    }
+                    finally
+                    {
+                        windowDb.SqlConnectionClose();
+                    }
+                    if (dtWindow != null && dtWindow.Rows.Count > 0 && !Convert.ToBoolean(dtWindow.Rows[0]["IsAllowedNow"]))
+                    {
+                        aInformation.Msd = "Punch in is allowed only between " + dtWindow.Rows[0]["PunchInFrom"] + " and " + dtWindow.Rows[0]["PunchInTo"] + ".";
+                        aInformation.isSuccess = false;
+                        return aInformation;
+                    }
+                }
+
                 List<SqlParameter> gSqlParameterList = new List<SqlParameter>();
                 DateTime entryDtae = DateTime.Now;
                 gSqlParameterList.Add(new SqlParameter("@attendaceDate", atten.AttendanceDate));
                 gSqlParameterList.Add(new SqlParameter("@pInTime", atten.PunchInTime));
                 gSqlParameterList.Add(new SqlParameter("@pInLat", atten.PInLat));
                 gSqlParameterList.Add(new SqlParameter("@pInLong", atten.PInLog));
-                 
+
                 gSqlParameterList.Add(new SqlParameter("@remarks", atten.POutRemarks));
                 gSqlParameterList.Add(new SqlParameter("@empId", atten.EmpInfoId));
                 gSqlParameterList.Add(new SqlParameter("@EntryDate", entryDtae));
@@ -878,9 +907,8 @@ namespace SalesSolutionWebAPI.Repository
                 accessManager.SqlConnectionClose(true);
                 aInformation.isSuccess = false;
                 aInformation.ErrorMessage = exception.Message;
-                aInformation.Msd = "Your tour plans are not set yet!";
-
-                throw exception;
+                // Returned, not rethrown: a rethrow became HTTP 500 with no body, shown in the app as "Attendance Null".
+                aInformation.Msd = "Attendance could not be saved. Please try again. (" + exception.Message + ")";
             }
             finally
             {
@@ -951,6 +979,82 @@ namespace SalesSolutionWebAPI.Repository
             {
                 accessManager.SqlConnectionClose();
             }
+        }
+
+        public DataTable GetAttendancePunchWindow(int empId)
+        {
+            try
+            {
+                accessManager.SqlConnectionOpen(DataBase.SalesDisDB);
+                List<SqlParameter> gsql = new List<SqlParameter>();
+                gsql.Add(new SqlParameter("@empId", empId));
+                return accessManager.GetDataTable("sp_Webapi_Get_AttendancePunchWindow", gsql);
+            }
+            finally
+            {
+                accessManager.SqlConnectionClose();
+            }
+        }
+
+        public ResultInfo SaveAttendancePunchWindow(AttendancePunchWindowRequest request)
+        {
+            ResultInfo aInformation = new ResultInfo();
+            TimeSpan from, to;
+            if (request == null || request.EmpId <= 0
+                || !TimeSpan.TryParse(request.PunchInFrom, out from) || !TimeSpan.TryParse(request.PunchInTo, out to)
+                || from < TimeSpan.Zero || from.Days > 0 || to < TimeSpan.Zero || to.Days > 0)
+            {
+                aInformation.isSuccess = false;
+                aInformation.Msd = "Invalid time. Use HH:mm.";
+                return aInformation;
+            }
+            try
+            {
+                accessManager.SqlConnectionOpen(DataBase.SalesDisDB);
+                List<SqlParameter> gSqlParameterList = new List<SqlParameter>();
+                gSqlParameterList.Add(new SqlParameter("@empId", request.EmpId));
+                gSqlParameterList.Add(new SqlParameter("@PunchInFrom", from));
+                gSqlParameterList.Add(new SqlParameter("@PunchInTo", to));
+                gSqlParameterList.Add(new SqlParameter("@EntryBy", request.EntryBy ?? (object)DBNull.Value));
+                aInformation.isSuccess = accessManager.SaveData("sp_Webapi_Save_AttendancePunchWindow", gSqlParameterList);
+            }
+            catch (Exception exception)
+            {
+                accessManager.SqlConnectionClose(true);
+                aInformation.isSuccess = false;
+                aInformation.ErrorMessage = exception.Message;
+                throw exception;
+            }
+            finally
+            {
+                accessManager.SqlConnectionClose();
+            }
+            return aInformation;
+        }
+
+        public ResultInfo RemoveAttendancePunchWindow(AttendancePunchWindowRequest request)
+        {
+            ResultInfo aInformation = new ResultInfo();
+            try
+            {
+                accessManager.SqlConnectionOpen(DataBase.SalesDisDB);
+                List<SqlParameter> gSqlParameterList = new List<SqlParameter>();
+                gSqlParameterList.Add(new SqlParameter("@empId", request.EmpId));
+                gSqlParameterList.Add(new SqlParameter("@EntryBy", request.EntryBy ?? (object)DBNull.Value));
+                aInformation.isSuccess = accessManager.SaveData("sp_Webapi_Remove_AttendancePunchWindow", gSqlParameterList);
+            }
+            catch (Exception exception)
+            {
+                accessManager.SqlConnectionClose(true);
+                aInformation.isSuccess = false;
+                aInformation.ErrorMessage = exception.Message;
+                throw exception;
+            }
+            finally
+            {
+                accessManager.SqlConnectionClose();
+            }
+            return aInformation;
         }
 
         public ResultInfo SaveShiftCategoryList(EmpShiftCategoryRequest request)

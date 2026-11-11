@@ -24,13 +24,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.creatrix.unicorn.Activity.Doctor.TourePlan.Adapter.DayPillAdapter;
 import com.creatrix.unicorn.Activity.Doctor.TourePlan.Adapter.DayWiseTourPlanAdapter;
-import com.creatrix.unicorn.Activity.Doctor.TourePlan.Model.TourPlanReq;
+import com.creatrix.unicorn.Activity.Doctor.TourePlan.Model.DayWiseTourPlanReq;
+import com.creatrix.unicorn.Activity.Doctor.TourePlan.Model.DayWiseTourPlanRow;
 import com.creatrix.unicorn.DBAdapter.DBCrudHelper;
 import com.creatrix.unicorn.DBAdapter.DBDoctor.DBDoctorHelper;
 import com.creatrix.unicorn.Model.Customer;
+import com.creatrix.unicorn.Model.Doctor.DoctorChamberName;
 import com.creatrix.unicorn.Model.Doctor.DoctorListViewModel;
 import com.creatrix.unicorn.Model.ResultInfo;
-import com.creatrix.unicorn.Model.TourPlanViewModel;
 import com.creatrix.unicorn.Network.RetrofitClientInstance;
 import com.creatrix.unicorn.Network.TourApiCall;
 import com.creatrix.unicorn.R;
@@ -53,14 +54,19 @@ public class DayWiseTourPlanActivity extends AppCompatActivity {
 
     private static final String TAG = "DayWiseTourPlanActivity";
 
-    private String[] yearList = {"2021", "2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030"};
+    // last, current and next year only, so a far-off year can't be picked by mistake
+    private final int thisYear = Calendar.getInstance().get(Calendar.YEAR);
+    private String[] yearList = {String.valueOf(thisYear - 1), String.valueOf(thisYear), String.valueOf(thisYear + 1)};
     private String[] monthNameArray = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
     private Toolbar toolbarCustom;
     private Spinner monthSpinner, yearSpinner;
     private RecyclerView rvDaySelector, rvItems;
     private RadioGroup rgVisitType;
-    private RadioButton rbtnCustomer, rbtnDoctor;
+    private RadioButton rbtnCustomer, rbtnDoctor, rbtnMorning;
+    private RadioGroup rgShift;
+    private View llShift;
+    private Map<Integer, List<DoctorChamberName>> allChambersByDoctor = new HashMap<>();
     private TextView tvSelectionHeader;
     private EditText etSearch;
     private Button btnSave, btnFinalSubmit;
@@ -78,6 +84,10 @@ public class DayWiseTourPlanActivity extends AppCompatActivity {
     // State maps for day-wise selections
     private Map<String, Set<Integer>> selectedCustomerIdsByDate = new HashMap<>();
     private Map<String, Set<Integer>> selectedDoctorIdsByDate = new HashMap<>();
+    // Chamber-wise plan: date -> (doctorId -> chamberId); a selected doctor without an entry is doctor-wise
+    private Map<String, Map<Integer, Integer>> selectedChamberIdsByDate = new HashMap<>();
+    // "yyyy-MM" months already loaded from the server, so going back to a month keeps unsaved edits
+    private Set<String> loadedMonths = new HashSet<>();
 
     private DayPillAdapter dayPillAdapter;
     private DayWiseTourPlanAdapter tourPlanAdapter;
@@ -104,6 +114,7 @@ public class DayWiseTourPlanActivity extends AppCompatActivity {
         setupActionButtons();
 
         loadDataFromSQLite();
+        loadSavedPlan();
     }
 
     private void initViews() {
@@ -115,6 +126,9 @@ public class DayWiseTourPlanActivity extends AppCompatActivity {
         rgVisitType = findViewById(R.id.rgVisitType);
         rbtnCustomer = findViewById(R.id.rbtnCustomer);
         rbtnDoctor = findViewById(R.id.rbtnDoctor);
+        rgShift = findViewById(R.id.rgShift);
+        rbtnMorning = findViewById(R.id.rbtnMorning);
+        llShift = findViewById(R.id.llShift);
         tvSelectionHeader = findViewById(R.id.tvSelectionHeader);
         etSearch = findViewById(R.id.etSearch);
         btnSave = findViewById(R.id.btnSave);
@@ -168,6 +182,7 @@ public class DayWiseTourPlanActivity extends AppCompatActivity {
                     selectedYear = Integer.parseInt(yearSpinner.getSelectedItem().toString());
                     selectedMonthIndex = monthSpinner.getSelectedItemPosition();
                     updateDaySelectorList();
+                    loadSavedPlan();
                 } catch (Exception e) {
                     Log.e(TAG, "Error updating date from spinner", e);
                 }
@@ -236,6 +251,13 @@ public class DayWiseTourPlanActivity extends AppCompatActivity {
         return selectedDoctorIdsByDate.get(dateStr);
     }
 
+    private Map<Integer, Integer> getOrCreateChamberMap(String dateStr) {
+        if (!selectedChamberIdsByDate.containsKey(dateStr)) {
+            selectedChamberIdsByDate.put(dateStr, new HashMap<>());
+        }
+        return selectedChamberIdsByDate.get(dateStr);
+    }
+
     private void setupRecyclerView() {
         rvItems.setLayoutManager(new LinearLayoutManager(this));
         tourPlanAdapter = new DayWiseTourPlanAdapter(this, selectedCount -> updateHeaderSelectionCount());
@@ -246,12 +268,14 @@ public class DayWiseTourPlanActivity extends AppCompatActivity {
         rgVisitType.setOnCheckedChangeListener((group, checkedId) -> {
             etSearch.setText("");
             if (checkedId == R.id.rbtnCustomer) {
-                etSearch.setHint("🔍 Search customer");
+                etSearch.setHint("Search customer");
             } else {
-                etSearch.setHint("🔍 Search doctor");
+                etSearch.setHint("Search doctor");
             }
+            llShift.setVisibility(checkedId == R.id.rbtnDoctor ? View.VISIBLE : View.GONE);
             refreshCurrentListAndHeader();
         });
+        rgShift.setOnCheckedChangeListener((group, checkedId) -> refreshCurrentListAndHeader());
 
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override
@@ -281,11 +305,17 @@ public class DayWiseTourPlanActivity extends AppCompatActivity {
                     docList = dbDoctorHelper.getCustDoctorListFromSQLite("Doc");
                 }
                 final ArrayList<DoctorListViewModel> doctors = (docList != null) ? docList : new ArrayList<>();
+                // shortcut: one small SQLite query per doctor; add a bulk chamber query if doctor lists get large
+                final Map<Integer, List<DoctorChamberName>> chambersByDoctor = new HashMap<>();
+                for (DoctorListViewModel d : doctors) {
+                    chambersByDoctor.put(d.getDoctorId(), dbDoctorHelper.getChamberIdListFromSQLite(d.getDoctorId()));
+                }
 
                 runOnUiThread(() -> {
                     progressDialog.dismiss();
                     masterCustomerList = (customers != null) ? customers : new ArrayList<>();
                     masterDoctorList = doctors;
+                    allChambersByDoctor = chambersByDoctor;
 
                     filteredCustomerList = new ArrayList<>(masterCustomerList);
                     filteredDoctorList = new ArrayList<>(masterDoctorList);
@@ -302,7 +332,56 @@ public class DayWiseTourPlanActivity extends AppCompatActivity {
         }).start();
     }
 
+    /** Shows the plan already saved on the server for the selected month as ticked items. */
+    private void loadSavedPlan() {
+        String month = String.format(Locale.US, "%04d-%02d", selectedYear, selectedMonthIndex + 1);
+        if (empId == 0 || !loadedMonths.add(month)) return;
+        TourApiCall service = RetrofitClientInstance.getRetrofitInstance().create(TourApiCall.class);
+        service.GetDayWiseTourPlan(empId, selectedMonthIndex + 1, selectedYear).enqueue(new Callback<List<DayWiseTourPlanRow>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<DayWiseTourPlanRow>> call, @NonNull Response<List<DayWiseTourPlanRow>> response) {
+                if (response.body() == null) {
+                    loadedMonths.remove(month);
+                    return;
+                }
+                for (DayWiseTourPlanRow row : response.body()) {
+                    if ("C".equals(row.Type)) {
+                        getOrCreateCustomerSet(row.TourPlanDate).add(row.Id);
+                    } else {
+                        getOrCreateDoctorSet(row.TourPlanDate).add(row.Id);
+                        if (row.ChamberId > 0) getOrCreateChamberMap(row.TourPlanDate).put(row.Id, row.ChamberId);
+                    }
+                }
+                refreshCurrentListAndHeader();
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<DayWiseTourPlanRow>> call, @NonNull Throwable t) {
+                loadedMonths.remove(month); // retry on the next month change
+                Log.e(TAG, "Loading saved day-wise tour plan failed", t);
+            }
+        });
+    }
+
+    /** Days before today are view-only. */
+    private boolean isPastDate() {
+        Calendar today = Calendar.getInstance();
+        String todayStr = String.format(Locale.US, "%04d-%02d-%02d",
+                today.get(Calendar.YEAR), today.get(Calendar.MONTH) + 1, today.get(Calendar.DAY_OF_MONTH));
+        return currentDateStr.compareTo(todayStr) < 0;
+    }
+
+    private void applyReadOnlyState() {
+        boolean past = isPastDate();
+        tourPlanAdapter.setReadOnly(past);
+        btnSave.setEnabled(!past);
+        btnFinalSubmit.setEnabled(!past);
+        btnSave.setAlpha(past ? 0.4f : 1f);
+        btnFinalSubmit.setAlpha(past ? 0.4f : 1f);
+    }
+
     private void filterCurrentList(String query) {
+        applyReadOnlyState();
         String filterPattern = (query != null) ? query.toLowerCase().trim() : "";
 
         if (rbtnCustomer.isChecked()) {
@@ -324,10 +403,24 @@ public class DayWiseTourPlanActivity extends AppCompatActivity {
             tourPlanAdapter.setCustomerData(filteredCustomerList, getOrCreateCustomerSet(currentDateStr));
         } else {
             filteredDoctorList.clear();
-            if (filterPattern.isEmpty()) {
-                filteredDoctorList.addAll(masterDoctorList);
-            } else {
-                for (DoctorListViewModel item : masterDoctorList) {
+            // Only chambers of the chosen shift; a doctor without such a chamber is hidden for that shift
+            boolean morning = rbtnMorning.isChecked();
+            Map<Integer, List<DoctorChamberName>> shiftChambers = new HashMap<>();
+            for (Map.Entry<Integer, List<DoctorChamberName>> e : allChambersByDoctor.entrySet()) {
+                List<DoctorChamberName> list = new ArrayList<>();
+                if (e.getValue() != null) {
+                    for (DoctorChamberName c : e.getValue()) {
+                        if (morning ? c.isMorning() : c.isEvening()) list.add(c);
+                    }
+                }
+                if (!list.isEmpty()) shiftChambers.put(e.getKey(), list);
+            }
+            tourPlanAdapter.setChambersByDoctor(shiftChambers);
+            for (DoctorListViewModel item : masterDoctorList) {
+                if (!shiftChambers.containsKey(item.getDoctorId())) continue;
+                if (filterPattern.isEmpty()) {
+                    filteredDoctorList.add(item);
+                } else {
                     boolean matchName = item.getDoctorName() != null && item.getDoctorName().toLowerCase().contains(filterPattern);
                     boolean matchCode = item.getDoctorCode() != null && item.getDoctorCode().toLowerCase().contains(filterPattern);
                     boolean matchMarket = item.getMarketName() != null && item.getMarketName().toLowerCase().contains(filterPattern);
@@ -338,7 +431,7 @@ public class DayWiseTourPlanActivity extends AppCompatActivity {
                     }
                 }
             }
-            tourPlanAdapter.setDoctorData(filteredDoctorList, getOrCreateDoctorSet(currentDateStr));
+            tourPlanAdapter.setDoctorData(filteredDoctorList, getOrCreateDoctorSet(currentDateStr), getOrCreateChamberMap(currentDateStr));
         }
         updateHeaderSelectionCount();
     }
@@ -360,9 +453,10 @@ public class DayWiseTourPlanActivity extends AppCompatActivity {
     }
 
     private void setupActionButtons() {
-        btnSave.setOnClickListener(v -> saveTourPlanLocally(false));
+        // Save keeps a draft on the server (so the selection is there next time); Final Submit marks it submitted
+        btnSave.setOnClickListener(v -> submitTourPlanToServer(false));
 
-        btnFinalSubmit.setOnClickListener(v -> submitTourPlanToServer());
+        btnFinalSubmit.setOnClickListener(v -> submitTourPlanToServer(true));
     }
 
     private boolean validateSelectionForDate(String dateStr) {
@@ -372,20 +466,11 @@ public class DayWiseTourPlanActivity extends AppCompatActivity {
         return (custSet != null && !custSet.isEmpty()) || (docSet != null && !docSet.isEmpty());
     }
 
-    private void saveTourPlanLocally(boolean showToast) {
-        if (!validateSelectionForDate(currentDateStr)) {
-            Toast.makeText(this, "Please select at least one Customer or Doctor.", Toast.LENGTH_SHORT).show();
+    private void submitTourPlanToServer(boolean finalSubmit) {
+        if (isPastDate()) {
+            Toast.makeText(this, "Past dates are view-only.", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        int custCount = getOrCreateCustomerSet(currentDateStr).size();
-        int docCount = getOrCreateDoctorSet(currentDateStr).size();
-
-        String msg = String.format(Locale.US, "Saved Tour Plan for %s:\n%d Customers, %d Doctors", currentDateStr, custCount, docCount);
-        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-    }
-
-    private void submitTourPlanToServer() {
         if (!validateSelectionForDate(currentDateStr)) {
             Toast.makeText(this, "Please select at least one Customer or Doctor.", Toast.LENGTH_LONG).show();
             return;
@@ -393,65 +478,48 @@ public class DayWiseTourPlanActivity extends AppCompatActivity {
 
         Set<Integer> custIds = getOrCreateCustomerSet(currentDateStr);
         Set<Integer> docIds = getOrCreateDoctorSet(currentDateStr);
+        Map<Integer, Integer> chamberIds = getOrCreateChamberMap(currentDateStr);
 
-        List<TourPlanViewModel> tpList = new ArrayList<>();
-        TourPlanViewModel tpViewModel = new TourPlanViewModel();
-
-        tpViewModel.setTourPlanDate(currentDateStr);
-        tpViewModel.setDayValue(selectedDay);
-        tpViewModel.setMonthValue(selectedMonthIndex + 1);
-        tpViewModel.setYearValue(selectedYear);
-        tpViewModel.setEmpInfoId(empId);
-        tpViewModel.setFinalSubmit(true);
-
-        List<Customer> selectedCustomers = new ArrayList<>();
-        for (Customer c : masterCustomerList) {
-            if (custIds.contains(c.getCustomerMasterId())) {
-                selectedCustomers.add(c);
-            }
+        DayWiseTourPlanReq dayReq = new DayWiseTourPlanReq();
+        dayReq.EmpInfoId = empId;
+        dayReq.TourPlanDate = currentDateStr;
+        dayReq.IsFinalSubmit = finalSubmit;
+        dayReq.CustomerIds.addAll(custIds);
+        for (Integer doctorId : docIds) {
+            Integer chamberId = chamberIds.get(doctorId);
+            dayReq.DoctorChambers.add(new DayWiseTourPlanReq.DoctorChamber(doctorId, chamberId != null ? chamberId : 0));
         }
-        tpViewModel.setaCustomerMasterList(selectedCustomers);
 
-        tpList.add(tpViewModel);
-
-        TourPlanReq req = new TourPlanReq();
-        req.setaTourPlanInfo(tpList);
-
-        progressDialog.setMessage("Submitting Tour Plan...");
+        String done = String.format(Locale.US, "Tour Plan %s for %s: %d Customers, %d Doctors",
+                finalSubmit ? "submitted" : "saved", currentDateStr, custIds.size(), docIds.size());
+        progressDialog.setMessage(finalSubmit ? "Submitting Tour Plan..." : "Saving Tour Plan...");
         progressDialog.show();
-
         try {
             TourApiCall service = RetrofitClientInstance.getRetrofitInstance().create(TourApiCall.class);
-            Call<ResultInfo> call = service.SaveTourPlanperday(req);
-
-            call.enqueue(new Callback<ResultInfo>() {
+            service.SaveDayWiseTourPlan(dayReq).enqueue(new Callback<ResultInfo>() {
                 @Override
                 public void onResponse(@NonNull Call<ResultInfo> call, @NonNull Response<ResultInfo> response) {
                     progressDialog.dismiss();
-                    if (response.isSuccessful() && response.body() != null) {
-                        ResultInfo result = response.body();
-                        if (result.getSuccess()) {
-                            Toast.makeText(DayWiseTourPlanActivity.this, "Tour Plan submitted successfully!", Toast.LENGTH_LONG).show();
-                        } else {
-                            String msg = result.getErrorMessage() != null ? result.getErrorMessage() : "Tour Plan submission failed";
-                            Toast.makeText(DayWiseTourPlanActivity.this, msg, Toast.LENGTH_LONG).show();
-                        }
+                    ResultInfo result = response.body();
+                    if (response.isSuccessful() && result != null && result.getSuccess()) {
+                        Toast.makeText(DayWiseTourPlanActivity.this, done, Toast.LENGTH_LONG).show();
                     } else {
-                        Toast.makeText(DayWiseTourPlanActivity.this, "Tour Plan saved successfully!", Toast.LENGTH_LONG).show();
+                        String msg = result != null && result.getErrorMessage() != null ? result.getErrorMessage() : "Tour Plan submission failed";
+                        Toast.makeText(DayWiseTourPlanActivity.this, msg, Toast.LENGTH_LONG).show();
                     }
                 }
 
                 @Override
                 public void onFailure(@NonNull Call<ResultInfo> call, @NonNull Throwable t) {
                     progressDialog.dismiss();
-                    Log.e(TAG, "API submission failed", t);
-                    Toast.makeText(DayWiseTourPlanActivity.this, "Tour Plan saved locally (Network offline)", Toast.LENGTH_LONG).show();
+                    Log.e(TAG, "Day-wise tour plan submission failed", t);
+                    Toast.makeText(DayWiseTourPlanActivity.this, "Tour Plan not submitted (network error). Please try again.", Toast.LENGTH_LONG).show();
                 }
             });
         } catch (Exception e) {
             progressDialog.dismiss();
-            Log.e(TAG, "Error submitting Tour Plan", e);
-            Toast.makeText(DayWiseTourPlanActivity.this, "Tour Plan saved locally", Toast.LENGTH_LONG).show();
+            Log.e(TAG, "Error submitting day-wise Tour Plan", e);
+            Toast.makeText(DayWiseTourPlanActivity.this, "Tour Plan not submitted. Please try again.", Toast.LENGTH_LONG).show();
         }
     }
 }

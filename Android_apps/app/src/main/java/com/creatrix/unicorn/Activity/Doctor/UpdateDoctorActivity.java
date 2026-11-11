@@ -1,5 +1,10 @@
 package com.creatrix.unicorn.Activity.Doctor;
 
+import com.creatrix.unicorn.Model.Doctor.DoctorListViewModel;
+import com.creatrix.unicorn.DBAdapter.DBDoctor.DBDoctorHelper;
+import android.text.TextUtils;
+import java.util.Map;
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
@@ -257,7 +262,7 @@ ActivityUpdateDoctorBinding binding;
 
                 ArrayList<DoctorARModel> arrayList = new ArrayList<>();
                 for (DoctorARModel item : doctorArrayList) {
-                    if ((item.getDoctorCode().toLowerCase().contains(doctorName.toLowerCase()) || (item.getDoctorCode().contains(doctorName)))) {
+                    if (ReportFilterHelper.matches(item.getDoctorCode(), item.getDoctorName(), doctorName)) {
                         arrayList.add(item);
                     }
                 }
@@ -316,6 +321,10 @@ ActivityUpdateDoctorBinding binding;
     private void LoadinView(List<DoctorARModel> body) {
         if (body != null) {
             doctorArrayList=body;
+            // the update API sends the code only; take the name from the synced doctor table
+            Map<Integer, String> names = new HashMap<>();
+            for (DoctorListViewModel d : new DBDoctorHelper(this).getDoctorListFromSQLite()) names.put(d.getDoctorId(), d.getDoctorName());
+            for (DoctorARModel d : body) if (TextUtils.isEmpty(d.getDoctorName())) d.setDoctorName(names.get(d.getDoctorId()));
             System.out.println("data area : "+body);
             if(progressDoalog!=null||progressDoalog.isShowing())
             {

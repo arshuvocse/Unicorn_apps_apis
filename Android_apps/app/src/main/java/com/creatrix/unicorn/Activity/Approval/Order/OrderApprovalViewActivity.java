@@ -313,6 +313,11 @@ public class OrderApprovalViewActivity extends AppCompatActivity implements IOrd
             }
 
         }
+        // DZSM (RoleTypeId 3) can approve/reject any item, whoever it is waiting on
+        if (RoleTypeId == 3) {
+            binding.btnEdit.setVisibility(View.VISIBLE);
+            binding.warnToast.setVisibility(View.GONE);
+        }
 
         binding.btnEdit.setOnClickListener(v->{
             Constants.WHO = "OrderApproveViewActivity";

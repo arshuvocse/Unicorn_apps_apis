@@ -1,6 +1,7 @@
 package com.creatrix.unicorn.Network;
 
 import com.creatrix.unicorn.Activity.DA.EmpTotalModel;
+import com.creatrix.unicorn.Activity.Reports.Model.ModelTourPlanReport;
 import com.creatrix.unicorn.Activity.Reports.Model.ResponseBonusGift;
 import com.creatrix.unicorn.Activity.SelfReports.TVAReport.Model.ModelTvaData;
 import com.creatrix.unicorn.Model.Rp_CampainViewModel;
@@ -27,8 +28,11 @@ public interface APICall_Report_i {
     @GET("/api/Reports/GetCampaingData")
     Call<List<Rp_CampainViewModel>> GetCampaingData(@Query("empId") int empId);
 
-    @GET("/api/Reports/GetTargetvsAcchive")
+    @GET("/api/Reports/GetTargetAchievement")
     Call<List<Rp_TargetAcchivment>> GetTarvsAcchi(@Query("empId") int empId, @Query("month") int month, @Query("year") int year);
+
+    @GET("/api/Reports/GetTargetAchievement")
+    Call<List<Rp_TargetAcchivment>> GetTarvsAcchi(@Query("empId") int empId, @Query("month") int month, @Query("year") int year, @Query("selectedEmpId") int selectedEmpId);
 
     @GET("/api/Reports/GetTerritoryTargetvsAcchive")
     ///Call<List<Rp_TargetAcchivment>> GetTeriTarvsAcchi(@Query("empId") int empId, @Query("FromDate") String FromDate, @Query("ToDate") String ToDate,@Query("Role") String Role);
@@ -43,4 +47,7 @@ public interface APICall_Report_i {
 
     @GET("/api/CusDemo/GetCollectionList")
     Call<List<ResponseBonusGift>> GetCollection(@QueryMap Map<String,String> data);
+
+    @GET("/api/Reports/GetTourPlanReport")
+    Call<List<ModelTourPlanReport>> GetTourPlanReport(@QueryMap Map<String,String> data);
 }

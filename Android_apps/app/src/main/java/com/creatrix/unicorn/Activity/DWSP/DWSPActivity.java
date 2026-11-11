@@ -32,6 +32,7 @@ import com.creatrix.unicorn.NormalAdapter.DWSPStatusBottomSheetDialog;
 import com.creatrix.unicorn.NormalAdapter.TourStatusBottomSheetDialog;
 import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.Services.Constants;
+import com.creatrix.unicorn.UtilityHelper.DateTimeUtil;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
 import com.creatrix.unicorn.databinding.ActivityDWSPBinding;
@@ -43,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 import okhttp3.HttpUrl;
 import retrofit2.Call;
@@ -181,7 +183,6 @@ public class DWSPActivity extends AppCompatActivity implements DWSPListener, DWS
         List<MonthDate> aMondateList = new ArrayList<>();
         SimpleDateFormat dateV = new SimpleDateFormat("dd");
         SimpleDateFormat nameV = new SimpleDateFormat("EEE");
-        SimpleDateFormat fmt2 = new SimpleDateFormat("EEE, dd MMM");
         SimpleDateFormat fmtdate = new SimpleDateFormat("yyyy-MM-dd");
         Calendar cal = Calendar.getInstance();
         cal.clear();
@@ -189,7 +190,7 @@ public class DWSPActivity extends AppCompatActivity implements DWSPListener, DWS
         int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
         for (int i = 0; i < daysInMonth; i++) {
             MonthDate monthDate = new MonthDate();
-            monthDate.setMonthName(fmt2.format(cal.getTime()));
+            monthDate.setMonthName(DateTimeUtil.getFormattedDate("EEE, dd MMM", cal.getTime()));
             monthDate.setDateValue(fmtdate.format(cal.getTime()));
             monthDate.setDateV(Integer.parseInt(dateV.format(cal.getTime())));
             monthDate.setDateName(nameV.format(cal.getTime()));

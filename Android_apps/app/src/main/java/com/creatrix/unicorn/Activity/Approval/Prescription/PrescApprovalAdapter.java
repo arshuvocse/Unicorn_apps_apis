@@ -151,6 +151,8 @@ public class PrescApprovalAdapter extends RecyclerView.Adapter<PrescApprovalAdap
                     }
                 }
             }
+            // DZSM (RoleTypeId 3) can approve/reject any item, whoever it is waiting on
+            if (RoleTypeId == 3 && ps.getToRoleTypeId() != null) holder.tv_approve.setVisibility(View.VISIBLE);
 
             holder.tv_approve.setOnClickListener(v -> {
                     approval.approvalKlick(ps);

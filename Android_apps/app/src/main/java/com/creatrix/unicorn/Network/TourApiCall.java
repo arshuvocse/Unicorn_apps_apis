@@ -85,6 +85,13 @@ public interface TourApiCall {
     @POST("/api/TourPlan/SaveTourPlanList_vThree")
     Call<ResultInfo> SaveTourPlanperday(@Body TourPlanReq aTourPlanInfo);
 
+    // Day-wise tour plan (doctor-wise / chamber-wise) - the DCR gate checks this plan
+    @POST("/api/TourPlan/SaveDayWiseTourPlan")
+    Call<ResultInfo> SaveDayWiseTourPlan(@Body com.creatrix.unicorn.Activity.Doctor.TourePlan.Model.DayWiseTourPlanReq req);
+
+    @GET("/api/TourPlan/GetDayWiseTourPlan")
+    Call<List<com.creatrix.unicorn.Activity.Doctor.TourePlan.Model.DayWiseTourPlanRow>> GetDayWiseTourPlan(@Query("empId") int empId, @Query("month") int month, @Query("year") int year);
+
     //Call<ResultInfo> SaveTourPlanperday(@Body List<TourPlanPostModel> aInfo);
     //Delete tour plan
     @POST("/api/TourPlan/DelTourPlan")

@@ -17,6 +17,7 @@ import com.creatrix.unicorn.Activity.Doctor.VisitPlan.Model.VisitplanModel;
 import com.creatrix.unicorn.Model.DcpCcpData;
 import com.creatrix.unicorn.Model.CordinateUpdate;
 import com.creatrix.unicorn.Model.DcrSM;
+import com.creatrix.unicorn.Model.Doctor.ChamberLocationRQ;
 import com.creatrix.unicorn.Model.DcrVM;
 import com.creatrix.unicorn.Model.Doctor.Brand;
 import com.creatrix.unicorn.Model.Doctor.ContactTypeVM;
@@ -99,6 +100,9 @@ public interface ApiDoctorCall {
     @GET("/api/Doctor/GetDoctorList")
     Call<List<DoctorListViewModel>> GetDoctorList(@Query("empId") int empId);
 
+    @GET("/api/Doctor/GetDoctorCountByUser")
+    Call<Integer> GetDoctorCountByUser(@Query("empId") int empId);
+
     @POST("/api/Doctor/UpdateDoctorLocation")
     Call<ResultInfo> UpdateDoctorLocation(@Body CordinateUpdate cordinateUpdate);
 
@@ -137,6 +141,9 @@ public interface ApiDoctorCall {
 
     @GET("/api/Doctor/GetDoctorChamberForDCR")
     Call<List<DoctorChamberTypeVM>> GetDoctorChamberDCR(@Query("doctorId") int doctorId);
+
+    @POST("/api/Doctor/SaveChamberLocation")
+    Call<ResultInfo> SaveChamberLocation(@Body ChamberLocationRQ aInfo);
 
     //Gift,Product,Sample
     @GET("/api/Doctor/GetProductForDcrByType")

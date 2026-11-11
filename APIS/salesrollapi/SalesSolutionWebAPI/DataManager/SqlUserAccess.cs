@@ -27,9 +27,9 @@
 
 
         ////Test Server 
-        //public static string DataSource = @"192.168.110.50\sa";
-        //public static string UserName = @"sa";
-        //public static string PassWord = @"sa1234";
+        // public static string DataSource = @"192.168.110.50\sa";
+        // public static string UserName = @"sa";
+        // public static string PassWord = @"sa1234";
 
 
 
@@ -52,13 +52,18 @@
         //
 
 
-        public static string DataSource = @"NASA-PC\MSSQLSERVER2019";
-        public static string UserName = "sa";
-        public static string PassWord = "sa1234";
-
-        // public static string DataSource = @"CSTL-VM-01\MSSQLSERVER2019";
+        // UNICORN_SQL_DATASOURCE lets Docker / local test runs point at another SQL Server without a code edit
+        // public static string DataSource = System.Environment.GetEnvironmentVariable("UNICORN_SQL_DATASOURCE") ?? @"192.168.110.50\sa";
         // public static string UserName = "sa";
-        // public static string PassWord = "N@fcoZ@s2023#";
+        // public static string PassWord = "sa1234";
+
+        //public static string DataSource = @"NASA-PC\MSSQLSERVER2019";
+        //public static string UserName = "sa";
+        //public static string PassWord = "sa1234";
+
+        public static string DataSource = @"CSTL-VM-01\MSSQLSERVER2019";
+        public static string UserName = "sa";
+        public static string PassWord = "N@fcoZ@s2023#";
 
 
 

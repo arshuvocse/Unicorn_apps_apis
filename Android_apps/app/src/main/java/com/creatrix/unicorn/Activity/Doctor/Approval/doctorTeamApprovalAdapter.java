@@ -135,8 +135,8 @@ public class doctorTeamApprovalAdapter extends RecyclerView.Adapter<doctorTeamAp
                 }
 
             }
-
-
+            // DZSM (RoleTypeId 3) can approve/reject any item, whoever it is waiting on
+            if (RoleTypeId == 3) holder.tv_approve.setVisibility(View.VISIBLE);
 
             holder.masterLayout.setOnClickListener(v -> {
                 Intent got_details = new Intent(context, DoctorApprovalDetails.class);

@@ -28,7 +28,9 @@ namespace DataLayer.Repository.Implementation
                 if (aOrderDetailses == null)
                 {
                     aInformation.isSuccess = false;
-                    aInformation.errormessagenew = "Duplicate Campaign Exist";
+                    aInformation.errormessagenew = string.IsNullOrWhiteSpace(aCampaignRepository.FailureReason)
+                        ? "These campaigns/products cannot be ordered together. Please select only one campaign, or place them as separate orders."
+                        : aCampaignRepository.FailureReason;
                     return aInformation;
                 }
 
@@ -163,6 +165,27 @@ namespace DataLayer.Repository.Implementation
                         // Pass IsBigData = true to prevent timeouts during large saves
                         accessManager.SaveData("sp_webapi_SaveOrderDetail", aSqlParameterList, true);
                     }
+
+                    // The submit location is extra information: a failure here must never lose the order.
+                    try
+                    {
+                        List<SqlParameter> locParams = new List<SqlParameter>
+                        {
+                            new SqlParameter("@OrderId", pk),
+                            new SqlParameter("@Latitude", (object)aOrder.Latitude ?? DBNull.Value),
+                            new SqlParameter("@Longitude", (object)aOrder.Longitude ?? DBNull.Value),
+                            new SqlParameter("@StreetAddress", (object)aOrder.StreetAddress ?? DBNull.Value)
+                        };
+                        accessManager.SaveData("sp_webapi_SaveOrderLocation", locParams, true);
+                    }
+                    catch
+                    {
+                    }
+                }
+                else
+                {
+                    aInformation.isSuccess = false;
+                    aInformation.errormessagenew = OrderSaveFailReason(aOrder) ?? "The order could not be saved. Please try again.";
                 }
             }
             catch (Exception ex)
@@ -171,7 +194,7 @@ namespace DataLayer.Repository.Implementation
                 aInformation.isSuccess = false;
                 aInformation.isError = true;
                 aInformation.ErrorMessage = ex.ToString();
-                aInformation.errormessagenew = $"{operationStage} failed: {ex.GetBaseException().Message}";
+                aInformation.errormessagenew = BuildFriendlyError(operationStage, ex);
             }
             finally
             {
@@ -180,6 +203,43 @@ namespace DataLayer.Repository.Implementation
 
 
             return aInformation;
+        }
+
+        // sp_webapi_SaveOrderMaster returns no id without saying why; ask the DB which of its guards fired.
+        private string OrderSaveFailReason(OrderMaster aOrder)
+        {
+            try
+            {
+                DataTable dt = accessManager.GetDataTable("sp_webapi_Get_OrderSaveFailReason", new List<SqlParameter>
+                {
+                    new SqlParameter("@empId", aOrder.EmpId),
+                    new SqlParameter("@CustomerCode", (object)aOrder.CustomerCode ?? DBNull.Value)
+                });
+                if (dt != null && dt.Rows.Count > 0 && dt.Rows[0]["Reason"] != DBNull.Value)
+                    return dt.Rows[0]["Reason"].ToString();
+            }
+            catch
+            {
+                // order_save_fail_reason.sql not run yet: keep the generic message
+            }
+            return null;
+        }
+
+        // Keep the technical detail in ErrorMessage; give the field user a readable reason.
+        private static string BuildFriendlyError(string operationStage, Exception ex)
+        {
+            string detail = ex.GetBaseException().Message ?? string.Empty;
+            if (detail.Length > 140) detail = detail.Substring(0, 140) + "...";
+
+            if (ex is TimeoutException || detail.IndexOf("timeout", StringComparison.OrdinalIgnoreCase) >= 0)
+                return "The server took too long to save the order. Please try again in a moment.";
+            if (detail.IndexOf("deadlock", StringComparison.OrdinalIgnoreCase) >= 0)
+                return "The server was busy while saving the order. Please try again in a moment.";
+            if (operationStage.StartsWith("campaign", StringComparison.OrdinalIgnoreCase))
+                return "The campaign could not be applied to these products. Please review the selected products/campaign, or place them as separate orders. (" + detail + ")";
+            if (operationStage.StartsWith("product", StringComparison.OrdinalIgnoreCase))
+                return "The products in this order could not be verified. Please try again. (" + detail + ")";
+            return "The order could not be placed. Please try again; if it keeps happening, contact support. (" + detail + ")";
         }
 
         private   (bool isValid, string message) ValidateForGhorSajaiType(OrderMaster aOrder, int custtypeid)

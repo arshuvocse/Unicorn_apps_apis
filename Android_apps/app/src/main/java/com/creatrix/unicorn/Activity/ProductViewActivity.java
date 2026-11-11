@@ -117,7 +117,11 @@ public class ProductViewActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(@NonNull Call<List<Product>> call, @NonNull Response<List<Product>> response) {
                     progressDoalog.dismiss();
-                    LoadinView(response.body());
+                    if (response.body() != null) {
+                        LoadinView(response.body());
+                    } else {
+                        ErrorView("Some Error occured");
+                    }
 
                 }
                 @Override

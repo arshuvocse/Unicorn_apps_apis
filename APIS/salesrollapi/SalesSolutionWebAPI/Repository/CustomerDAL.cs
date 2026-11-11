@@ -60,6 +60,8 @@ namespace SalesSolutionWebAPI.Repository
                 aSqlParameterList.Add(new SqlParameter("@empId", empId));
                 SqlDataReader dr = accessManager.GetSqlDataReader("sp_webapi_GetCustomerbyUser", aSqlParameterList);
                 List<mCustomer> aList = new List<mCustomer>();
+                // Addrees2 comes from sp_webapi_GetCustomerbyUser.sql (2026-10-27); a DB without it must still list customers.
+                bool hasAddrees2 = Enumerable.Range(0, dr.FieldCount).Any(i => dr.GetName(i) == "Addrees2");
 
                 while (dr.Read())
                 {
@@ -90,6 +92,7 @@ namespace SalesSolutionWebAPI.Repository
                     {
                         aInfo.Address = dr["Address"].ToString();
                     }
+                    aInfo.Addrees2 = hasAddrees2 && dr["Addrees2"] != DBNull.Value ? dr["Addrees2"].ToString() : "";
 
                     aInfo.Balance = dr["Balance"] != DBNull.Value ? dr["Balance"].ToString() : "";
                     aInfo.MarketName = dr["MarketName"] != DBNull.Value ? dr["MarketName"].ToString() : "";
@@ -159,6 +162,29 @@ namespace SalesSolutionWebAPI.Repository
 
 
 
+        }
+
+        // Lightweight count used by the app to decide whether a full GetCustomerByUser sync is needed,
+        // so a mobile client isn't forced to download and re-parse the whole list just to check for changes.
+        public int GetCustomerCountByUser(int empId)
+        {
+            try
+            {
+                accessManager.SqlConnectionOpen(DataBase.SalesDisDB);
+
+                List<SqlParameter> aSqlParameterList = new List<SqlParameter>();
+                aSqlParameterList.Add(new SqlParameter("@empId", empId));
+                DataTable dt = accessManager.GetDataTable("sp_webapi_GetCustomerbyUser", aSqlParameterList);
+                return dt.Rows.Count;
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+            finally
+            {
+                accessManager.SqlConnectionClose();
+            }
         }
 
         public mCustomer GetCustomerByUserByMobileNo(int empId, string CellNo)
@@ -432,6 +458,13 @@ namespace SalesSolutionWebAPI.Repository
             {
                 if (aInfo.CustomerMasterId == 0)
                 {
+                    if (string.IsNullOrWhiteSpace(aInfo.Address))
+                    {
+                        aInformation.isValiCheck = true;
+                        aInformation.isSuccess = false;
+                        aInformation.ErrorMessage = "Address (Union/Ward/Bazar) is required.";
+                        return aInformation;
+                    }
                     //var bsp = (aInfo.CustomerBSPCode ?? string.Empty).Trim();
                     //if (string.IsNullOrEmpty(bsp) ||
                     //    bsp.Equals("Select", StringComparison.OrdinalIgnoreCase) ||

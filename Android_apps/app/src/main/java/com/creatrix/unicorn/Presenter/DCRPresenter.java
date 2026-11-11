@@ -13,6 +13,8 @@ import com.creatrix.unicorn.DBAdapter.ProductSQLiteHelper;
 import com.creatrix.unicorn.Interface.IDCR;
 import com.creatrix.unicorn.Model.DcrSM;
 import com.creatrix.unicorn.Model.ResultInfo;
+import com.creatrix.unicorn.Model.Doctor.ChamberLocationRQ;
+import com.creatrix.unicorn.Model.Doctor.DoctorChamberName;
 import com.creatrix.unicorn.Model.TourTypeViewModel;
 import com.creatrix.unicorn.Model.UserByRole;
 import com.creatrix.unicorn.Model.UserRole;
@@ -50,6 +52,32 @@ public class DCRPresenter implements IDCR.Presenter {
             view.OnVisitTypeGet(dhelper.getVisitTypeIdListFromSQLite());
 
         }catch (Exception ex){
+        }
+    }
+
+    @Override
+    public void SaveChamberLocation(DoctorChamberName chamber, String lat, String lon) {
+        try {
+            ApiDoctorCall service = RetrofitClientInstance.getRetrofitInstance().create(ApiDoctorCall.class);
+            service.SaveChamberLocation(new ChamberLocationRQ(chamber.getChemberId(), lat, lon)).enqueue(new Callback<ResultInfo>() {
+                @Override
+                public void onResponse(@NonNull Call<ResultInfo> call, @NonNull Response<ResultInfo> response) {
+                    ResultInfo info = response.body();
+                    if (info != null && Boolean.TRUE.equals(info.getSuccess())) {
+                        dhelper.updateChamberLocation(chamber.getChemberId(), lat, lon);
+                        view.OnChamberLocationSaved(chamber, lat, lon);
+                    } else {
+                        view.OnChamberLocationError(info != null && info.getMsd() != null ? info.getMsd() : "Could not save the chamber location.");
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<ResultInfo> call, @NonNull Throwable t) {
+                    view.OnChamberLocationError("Network error. Please try again.");
+                }
+            });
+        } catch (Exception ex) {
+            view.OnChamberLocationError("Could not save the chamber location.");
         }
     }
 
@@ -113,6 +141,10 @@ public class DCRPresenter implements IDCR.Presenter {
                     if(info !=null){
                         if(info.getSuccess() == true){
                             view.OnDcrSaveSuccess("Successfully Submitted");
+                        }else if(info.getValiCheck()==true && info.getMsd()!=null && !info.getMsd().equals("Insufficient Quantity"))
+                        {
+                            // DCR area lock / tour plan rejection reason from the server
+                            view.OnDcrSaveError(info.getMsd());
                         }else if(info.getValiCheck()==true)
                         {
                             view.OnDcrSaveSuccess("Insufficient");

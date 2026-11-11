@@ -7,13 +7,19 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.view.LayoutInflater;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;
 import com.creatrix.unicorn.Model.Rp_TargetAcchivment;
 import com.creatrix.unicorn.Network.APICall_Report_i;
 import com.creatrix.unicorn.Network.RetrofitClientInstance;
@@ -24,11 +30,14 @@ import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.UtilityHelper;
 import com.github.dewinjm.monthyearpicker.MonthYearPickerDialog;
 import com.github.dewinjm.monthyearpicker.MonthYearPickerDialogFragment;
+import com.toptoche.searchablespinnerlibrary.SearchableSpinner;
 
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 import okhttp3.HttpUrl;
 import retrofit2.Call;
@@ -40,6 +49,8 @@ public class ReportsTargetAcheiActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private _targetAcchivementProductList_Recycler mAdapter;
     TextView selectedMonthTxt;
+    int selectedEmpId = 0, selMonth, selYear; // 0 = All (whole hierarchy)
+    String selectedEmpName = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +73,7 @@ public class ReportsTargetAcheiActivity extends AppCompatActivity {
         Calendar c = Calendar.getInstance();
         int year = c.get(Calendar.YEAR);
         int month = c.get(Calendar.MONTH);
+        selMonth = month; selYear = year;
         GetReportData(empId,(month + 1),year);
 
         selectedMonthTxt = findViewById(R.id.selectedMonthTxt);
@@ -72,26 +84,69 @@ public class ReportsTargetAcheiActivity extends AppCompatActivity {
         datePickerDeliveryDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MonthPicker(empId);
+                openFilter(empId);
             }
         });
     }
 
 
+    // Sales Person (same list/rules as the Attendance Report) + month, then one report call
+    private void openFilter(int empId) {
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setCancelable(true);
+        View v = LayoutInflater.from(this).inflate(R.layout.y_modal_target_filter, null);
+        dialog.setContentView(v);
+        dialog.show();
+        dialog.getWindow().setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+
+        SearchableSpinner spnEmp = v.findViewById(R.id.spnEmp);
+        ReportFilterHelper.loadSalesPersons(this, spnEmp);
+        TextView txtMonth = v.findViewById(R.id.txtMonth);
+        txtMonth.setText(UtilityHelper.monthNameArrayFull[selMonth] + ',' + selYear);
+        View.OnClickListener pick = x -> {
+            MonthYearPickerDialogFragment f = MonthYearPickerDialogFragment.getInstance(selMonth, selYear);
+            f.show(getSupportFragmentManager(), null);
+            f.setOnDateSetListener((year, monthOfYear) -> {
+                selMonth = monthOfYear; selYear = year;
+                txtMonth.setText(UtilityHelper.monthNameArrayFull[selMonth] + ',' + selYear);
+            });
+        };
+        v.findViewById(R.id.monthPicker).setOnClickListener(pick);
+        txtMonth.setOnClickListener(pick);
+
+        ((Button) v.findViewById(R.id.psubmitBnt)).setOnClickListener(x -> {
+            dialog.cancel();
+            selectedEmpId = ReportFilterHelper.selectedEmpIdOrZero(spnEmp);
+            if (spnEmp.getSelectedItem() != null) ((TextView) findViewById(R.id.toolbar_title)).setText(String.valueOf(spnEmp.getSelectedItem()));
+            selectedMonthTxt.setText(UtilityHelper.monthNameArrayFull[selMonth] + ',' + selYear);
+            GetReportData(empId, selMonth + 1, selYear);
+        });
+    }
+
     public void GetReportData(int empId,int month,int year) {
         progressDoalog = new ProgressDialog(ReportsTargetAcheiActivity.this);
-        progressDoalog.setMessage("Target vs Achievement is Loading....");
+        progressDoalog.setMessage("Target & Achievement is Loading....");
         progressDoalog.show();
         progressDoalog.setCanceledOnTouchOutside(false);
         try{
             APICall_Report_i service = RetrofitClientInstance.getRetrofitInstance().create(APICall_Report_i.class);
-            Call<List<Rp_TargetAcchivment>> call = service.GetTarvsAcchi(empId,month,year);
+            Call<List<Rp_TargetAcchivment>> call = service.GetTarvsAcchi(empId,month,year,selectedEmpId);
             HttpUrl ds = call.request().url();
             call.enqueue(new Callback<List<Rp_TargetAcchivment>>() {
                 @Override
                 public void onResponse(Call<List<Rp_TargetAcchivment>> call, Response<List<Rp_TargetAcchivment>> response) {
                     progressDoalog.dismiss();
+                    if (!response.isSuccessful() || response.body() == null) {
+                        LoadinView(new ArrayList<>());
+                        ErrorView("Target & Achievement could not be loaded. Please try again.");
+                        return;
+                    }
                     LoadinView(response.body());
+                    if (response.body().isEmpty()) {
+                        // no target uploaded and no sales yet for this month is a normal state, not an error
+                        ErrorView("No target or sales found for " + selectedMonthTxt.getText());
+                    }
                 }
                 @Override
                 public void onFailure(Call<List<Rp_TargetAcchivment>> call, Throwable t) {
@@ -124,7 +179,7 @@ public class ReportsTargetAcheiActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(mAdapter);
-        recyclerView.addItemDecoration(new DividerItemDecoration(getApplicationContext(),
+        if (recyclerView.getItemDecorationCount() == 0) recyclerView.addItemDecoration(new DividerItemDecoration(getApplicationContext(),
                 DividerItemDecoration.VERTICAL));
         recyclerView.setItemAnimator(null);
         recyclerView.scrollToPosition(0);
@@ -140,41 +195,23 @@ public class ReportsTargetAcheiActivity extends AppCompatActivity {
     public  void MakeTotalTargetAndAcchivement(List<Rp_TargetAcchivment> aList){
 
         try {
-            Double totalTar = 0.00;
-            Double totalAc = 0.00;
+            double totalTar = 0;
+            double totalAc = 0;
 
-            for (int i=0;i<aList.size();i++){
-                Double aT  = Double.parseDouble(aList.get(i).getTargetQty());
-                Double aA  = Double.parseDouble(aList.get(i).getAchivment());
-
-                totalTar = totalTar + aT;
-                totalAc = totalAc + aA;
+            for (Rp_TargetAcchivment item : aList){
+                totalTar += item.getTargetAmt();
+                totalAc += item.getSalesAmt();
             }
-
-
-
-
-
-
-
 
             TextView mainTarget = findViewById(R.id.mainTarget);
             TextView mainAcciv = findViewById(R.id.mainAcciv);
             TextView mainPerc = findViewById(R.id.mainPerc);
+            TextView mainBalance = findViewById(R.id.mainBalance);
 
-            mainTarget.setText(totalTar.toString());
-            mainAcciv.setText(totalAc.toString());
-
-            Double perQty =(totalAc * 100)/totalTar;
-            if(totalAc !=0){
-                mainPerc.setText("0%");
-            }else{
-                Double AcPercent  = MathUtil.round(perQty,2);
-                String withPercentSign = AcPercent.toString() + "%";
-                mainPerc.setText(withPercentSign);
-            }
-
-
+            mainTarget.setText(String.format(Locale.US, "%.2f", totalTar));
+            mainAcciv.setText(String.format(Locale.US, "%.2f", totalAc));
+            mainBalance.setText(String.format(Locale.US, "%.2f", totalTar - totalAc));
+            mainPerc.setText(totalTar == 0 ? "0%" : String.format(Locale.US, "%.2f%%", totalAc * 100 / totalTar));
 
         }catch (Exception ex){
             ex.printStackTrace();

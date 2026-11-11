@@ -198,12 +198,12 @@ public class DcrApprovalListActivity extends AppCompatActivity implements IDcrAp
         bsheetdlg = new BottomSheetDialog(DcrApprovalListActivity.this);
         bsheetdlg.setContentView(ftm.getRoot());
         bsheetdlg.setCanceledOnTouchOutside(true);
-        ftm.filterMarketLayout.marketStructure.setVisibility(VISIBLE);
+        ftm.filterMarketLayout.marketStructure.setVisibility(GONE);
         ftm.filterStatusLayout.getRoot().setVisibility(VISIBLE);
         ftm.filterMonthYearLayout.getRoot().setVisibility(VISIBLE);
         ftm.linearLayoutemp.setVisibility(GONE);
         ftm.filterTypeLayout.tilDoctype.setVisibility(View.VISIBLE);
-        ftm.filterTypeLayout.tilProgtypetype.setVisibility(View.VISIBLE);
+        ftm.filterTypeLayout.tilProgtypetype.setVisibility(GONE);
         ftm.filterTypeLayout.tilPharmatype.setVisibility(View.VISIBLE);
         ftm.filterTypeLayout.tilCusttype.setVisibility(GONE);
 

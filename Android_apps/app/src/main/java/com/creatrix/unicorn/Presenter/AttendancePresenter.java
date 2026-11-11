@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import com.creatrix.unicorn.Activity.Attendance.Model.ApproveRQ;
 import com.creatrix.unicorn.Activity.Attendance.Model.AttenApproval;
 import com.creatrix.unicorn.Activity.Attendance.Model.ButtonRP;
+import com.creatrix.unicorn.Activity.Attendance.Model.PunchWindow;
 import com.creatrix.unicorn.Activity.Attendance.Model.ShiftCategory;
 import com.creatrix.unicorn.Activity.Attendance.Model.SaveShiftCategoryRequest;
 import com.creatrix.unicorn.DBAdapter.DBCrudHelper;
@@ -71,10 +72,11 @@ public class AttendancePresenter implements IAttendance.Presenter {
                                     view.onSuccess(info.getMsd(),true, 2);
                                 }
                             } else {
-                                SnackBarManagement._warning_CustomMessage(masterLayout,"Already Attendance done");
+                                SnackBarManagement._warning_CustomMessage(masterLayout,
+                                        info.getMsd() != null ? info.getMsd() : "Already Attendance done");
                             }
                         } else {
-                            Toast.makeText(context, "Attendance Null", Toast.LENGTH_SHORT).show();
+                            view.onError("Attendance not saved: server error (HTTP " + response.code() + "). Please try again.", 1);
                         }
                     }
                     @Override
@@ -298,6 +300,26 @@ public class AttendancePresenter implements IAttendance.Presenter {
                 Log.e("Exception",str);
                 view.onError(str,1);
             }
+        }
+    }
+
+    @Override
+    public void getPunchWindow(int empId) {
+        if (NetworkInformation.isConnected(context)) {
+            AttendanceApi service = RetrofitClientInstanceAttendance.getRetrofitInstance().create(AttendanceApi.class);
+            service.GetPunchWindow(empId).enqueue(new Callback<List<PunchWindow>>() {
+                @Override
+                public void onResponse(@NonNull Call<List<PunchWindow>> call, @NonNull Response<List<PunchWindow>> response) {
+                    if (response.body() != null && !response.body().isEmpty()) {
+                        view.onPunchWindow(response.body().get(0));
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<List<PunchWindow>> call, @NonNull Throwable t) {
+                    // Server still enforces the window on save.
+                }
+            });
         }
     }
 

@@ -1,5 +1,8 @@
 package com.creatrix.unicorn.Activity.Customer;
 
+import android.text.TextUtils;
+import java.util.Map;
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
@@ -255,7 +258,7 @@ ActivityUpdateCustomerBinding binding;
 
                 ArrayList<CustomerARModel> arrayList = new ArrayList<>();
                 for (CustomerARModel item : customerArrayList) {
-                    if ((item.getCustomerName().toLowerCase().contains(customerName.toLowerCase()) || (item.getCustomerName().contains(customerName)))) {
+                    if (ReportFilterHelper.matches(item.getCustomerCode(), item.getCustomerName(), customerName)) {
                         arrayList.add(item);
                     }
                 }
@@ -333,6 +336,10 @@ ActivityUpdateCustomerBinding binding;
         {
             progressDoalog.dismiss();
         }
+        // the update API sends no customer code; take it from the synced customer table
+        Map<Integer, String> codes = new HashMap<>();
+        for (Customer c : new DBCrudHelper(this).getCustomerList_SQLite()) codes.put(c.getCustomerMasterId(), c.getCustomerCode());
+        for (CustomerARModel c : aList) if (TextUtils.isEmpty(c.getCustomerCode())) c.setCustomerCode(codes.get(c.getCustomerMasterId()));
         binding.count.setText(String.valueOf(aList.size()));
         cAdapter = new CustomerUpdatAdapter(aList, UpdateCustomerActivity.this);
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());

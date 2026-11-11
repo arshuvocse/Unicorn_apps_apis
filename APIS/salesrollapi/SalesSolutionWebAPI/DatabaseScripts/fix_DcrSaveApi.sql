@@ -1,3 +1,4 @@
+-- SUPERSEDED for sp_Webapi_Save_DcrInfo / sp_Webapi_Get_ChamberName: re-run dcr_area_lock_and_tourplan_gate.sql after this script, or the DCR area lock / tour plan gate is lost.
 SET XACT_ABORT ON;
 GO
 

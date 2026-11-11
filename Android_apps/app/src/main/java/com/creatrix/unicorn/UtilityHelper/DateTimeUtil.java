@@ -27,12 +27,21 @@ public class DateTimeUtil {
     public static final String CLIENT_AM_PM_FORMAT = "a";
     public static final String DATE_AS_FILE_NAME_FORMAT = "yyyyMMdd_HHmmss";
 
+    /**
+     * Mandatory app-wide UI display date format (e.g. 02-Sep-2026). Locale-independent:
+     * always renders the English 3-letter month abbreviation, never "Sept" (see getFormattedDate).
+     * This is the ONLY format that should be used for showing a date to the user. It must never
+     * be sent to an API/SQL layer directly - convert back with parseDisplayDate() first.
+     */
+    public static final String DISPLAY_DATE_FORMAT = "dd-MMM-yyyy";
+    public static final String DISPLAY_DATE_TIME_FORMAT_12H = "dd-MMM-yyyy hh:mm a";
+
     public static String getFormattedDate(String format) {
         if (format == null) {
             return null;
         }
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format, Locale.US);
-        return simpleDateFormat.format(new Date());
+        return simpleDateFormat.format(new Date()).replace("Sept", "Sep");
     }
 
     public static String getFormattedDate(String format, Date date) {
@@ -40,7 +49,7 @@ public class DateTimeUtil {
             return null;
         }
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format, Locale.US);
-        return simpleDateFormat.format(date);
+        return simpleDateFormat.format(date).replace("Sept", "Sep");
     }
 
     public static String getFormattedDate(String format, Calendar calendar) {
@@ -55,7 +64,7 @@ public class DateTimeUtil {
             return null;
         }
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format, Locale.US);
-        return simpleDateFormat.format(new Date(date));
+        return simpleDateFormat.format(new Date(date)).replace("Sept", "Sep");
     }
 
     public static String getFormattedDate(String format, String date) {
@@ -66,6 +75,38 @@ public class DateTimeUtil {
             return null;
         }
         return getFormattedDate(format, dateLong);
+    }
+
+    public static String getDisplayDate() {
+        return getFormattedDate(DISPLAY_DATE_FORMAT);
+    }
+
+    public static String getDisplayDate(Date date) {
+        return getFormattedDate(DISPLAY_DATE_FORMAT, date);
+    }
+
+    public static String getDisplayDate(Calendar calendar) {
+        return getFormattedDate(DISPLAY_DATE_FORMAT, calendar);
+    }
+
+    public static String getDisplayDate(String date) {
+        return getFormattedDate(DISPLAY_DATE_FORMAT, date);
+    }
+
+    public static String getDisplayDateTime() {
+        return getFormattedDate(DISPLAY_DATE_TIME_FORMAT_12H);
+    }
+
+    public static String getDisplayDateTime(Date date) {
+        return getFormattedDate(DISPLAY_DATE_TIME_FORMAT_12H, date);
+    }
+
+    public static String getDisplayDateTime(Calendar calendar) {
+        return getFormattedDate(DISPLAY_DATE_TIME_FORMAT_12H, calendar);
+    }
+
+    public static Date parseDisplayDate(String date) {
+        return getDate(DISPLAY_DATE_FORMAT, date);
     }
 
     public static String getFormattedClientDateShort(String date) {
@@ -191,7 +232,7 @@ public class DateTimeUtil {
         }
         try {
             DateFormat dateFormat = new SimpleDateFormat(format, Locale.US);
-            return dateFormat.parse(date);
+            return dateFormat.parse(date.replace("Sept", "Sep"));
         } catch (Exception e) {
             e.printStackTrace();
         }

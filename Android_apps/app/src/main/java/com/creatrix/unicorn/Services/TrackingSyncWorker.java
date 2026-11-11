@@ -24,6 +24,8 @@ import retrofit2.Response;
 public class TrackingSyncWorker extends Worker {
     private static final String UNIQUE_WORK_NAME = "tracking_queue_sync";
     private static final int BATCH_SIZE = 100;
+    // A point the server keeps rejecting must not block the ones behind it forever, nor pile up.
+    private static final long DROP_REJECTED_AFTER_MS = 24L * 60 * 60 * 1000;
 
     public TrackingSyncWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
@@ -43,29 +45,54 @@ public class TrackingSyncWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        TrackingQueueDbHelper database = new TrackingQueueDbHelper(getApplicationContext());
+        return flushQueue(getApplicationContext(), this::isStopped) ? Result.success() : Result.retry();
+    }
+
+    /**
+     * Uploads every queued point now. Also called straight from the 5-minute tick so the point
+     * reaches the server immediately instead of waiting for WorkManager.
+     *
+     * @return true when the queue is empty, false when something is left for a later retry
+     */
+    public static synchronized boolean flushQueue(Context context, java.util.function.BooleanSupplier isStopped) {
+        TrackingQueueDbHelper database = new TrackingQueueDbHelper(context);
         GetDataService service = RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class);
 
         try {
-            while (!isStopped()) {
-                List<TrackingQueueDbHelper.PendingTracking> pending = database.getPending(BATCH_SIZE);
+            boolean anyFailed = false;
+            long lastSeenId = 0;
+            while (!isStopped.getAsBoolean()) {
+                List<TrackingQueueDbHelper.PendingTracking> pending = database.getPending(lastSeenId, BATCH_SIZE);
                 if (pending.isEmpty()) {
-                    return Result.success();
+                    return !anyFailed;
                 }
 
                 for (TrackingQueueDbHelper.PendingTracking item : pending) {
-                    Response<ResultInfo> response = service.SaveTracking(item.getTracking()).execute();
-                    ResultInfo body = response.body();
-                    if (!response.isSuccessful() || body == null || !Boolean.TRUE.equals(body.getSuccess())) {
-                        return Result.retry();
+                    lastSeenId = item.getId();
+                    boolean uploaded;
+                    try {
+                        Response<ResultInfo> response = service.SaveTracking(item.getTracking()).execute();
+                        ResultInfo body = response.body();
+                        uploaded = response.isSuccessful() && body != null && Boolean.TRUE.equals(body.getSuccess());
+                    } catch (java.io.IOException networkError) {
+                        // No connection/timeouts: stop and retry everything later, keep the order.
+                        return false;
                     }
-                    database.delete(item.getId());
+
+                    if (uploaded) {
+                        database.delete(item.getId());
+                    } else {
+                        anyFailed = true;
+                        if (System.currentTimeMillis() - item.getCreatedAt() > DROP_REJECTED_AFTER_MS) {
+                            database.delete(item.getId());
+                        }
+                    }
                 }
             }
-            return Result.retry();
+            return false;
         } catch (Exception exception) {
             Log.e("TrackingSyncWorker", "Tracking sync failed", exception);
-            return Result.retry();
+            return false;
         } finally {
             database.close();
         }

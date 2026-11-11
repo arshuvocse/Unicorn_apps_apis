@@ -1,5 +1,6 @@
 package com.creatrix.unicorn.Activity.Doctor.TourePlan.TP;
 
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
@@ -2131,14 +2132,7 @@ int e_selectedTeriIdEdit=0;
     private void filter(String word) {
         List<Customer> filterwordlist = new ArrayList<>();
         for (Customer words : aCustomerList) {
-            if (words.getCustomerName() == null) {
-                try {
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            if (words.getCustomerName().toLowerCase().contains(word.toLowerCase())) {
+            if (ReportFilterHelper.matches(words.getCustomerCode(), words.getCustomerName(), word)) {
                 filterwordlist.add(words);
             }
         }

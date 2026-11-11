@@ -802,5 +802,13 @@ public class TourPlanViewModel
         public bool IsFinalSubmit { get; set; } = true;
         public List<int> CustomerIds { get; set; } = new List<int>();
         public List<int> DoctorIds { get; set; } = new List<int>();
+        // Chamber-wise plan; when sent it replaces DoctorIds. ChamberId 0 = doctor-wise (any chamber).
+        public List<DayWiseTourPlanDoctorChamber> DoctorChambers { get; set; } = new List<DayWiseTourPlanDoctorChamber>();
+    }
+
+    public class DayWiseTourPlanDoctorChamber
+    {
+        public int DoctorId { get; set; }
+        public int ChamberId { get; set; }
     }
 }

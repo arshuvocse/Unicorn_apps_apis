@@ -32,6 +32,7 @@ import com.creatrix.unicorn.Model.ProductSample;
 import com.creatrix.unicorn.Presenter.OrderManagementPresenter;
 import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.RecyclerAdapter._product_orderpage_adapter;
+import com.creatrix.unicorn.UtilityHelper.DateTimeUtil;
 import com.creatrix.unicorn.UtilityHelper.NetworkInformation;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
@@ -198,8 +199,7 @@ public class SampleOrderActivity extends AppCompatActivity implements RecyclerVi
             public void onClick(View v) {
                 Date c = Calendar.getInstance().getTime();
 
-                SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault());
-                String formattedDate = df.format(c);
+                String formattedDate = DateTimeUtil.getDisplayDate(c);
                 String deliveryDate = formattedDate;
                 String collectioDate = formattedDate;
 
@@ -257,8 +257,7 @@ public class SampleOrderActivity extends AppCompatActivity implements RecyclerVi
             @Override
             public void onClick(View v) {
                 Date c = Calendar.getInstance().getTime();
-                SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault());
-                String formattedDate = df.format(c);
+                String formattedDate = DateTimeUtil.getDisplayDate(c);
                 String deliveryDate = formattedDate;
                 String collectioDate = formattedDate;
                 int comUnitId = 2;

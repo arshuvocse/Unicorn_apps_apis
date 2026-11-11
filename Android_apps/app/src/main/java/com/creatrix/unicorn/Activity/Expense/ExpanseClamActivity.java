@@ -44,6 +44,7 @@ import com.creatrix.unicorn.Presenter.ExpenseClaimPresenter;
 import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.Services.Constants;
 import com.creatrix.unicorn.UtilityHelper.CameraHelper;
+import com.creatrix.unicorn.UtilityHelper.DateTimeUtil;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
 import com.creatrix.unicorn.UtilityHelper.UtilityHelper;
@@ -90,7 +91,7 @@ public class ExpanseClamActivity extends AppCompatActivity implements IExpenseCl
         // setContentView(R.layout.activity_expanse_clam);
         setContentView(binding.getRoot());
         binding.toolbarCustom.setNavigationOnClickListener(v -> finish());
-        binding.expdate.setText(new SimpleDateFormat("dd-MMM-yyyy hh:mm a", Locale.getDefault()).format(new Date()));
+        binding.expdate.setText(DateTimeUtil.getDisplayDateTime());
         session = new SessionManagement(getApplicationContext());
         HashMap<String, String> user = session.getUserDetails();
         int empId = Integer.parseInt(user.get(SessionManagement.KEY_EmpId));
@@ -253,7 +254,7 @@ public class ExpanseClamActivity extends AppCompatActivity implements IExpenseCl
                 img_str = Base64.encodeToString(image, 0);
                 System.out.println("img : "+img_str);
 
-                String exDate = binding.expdate.getText().toString();
+                String exDate = binding.expdate.getText().toString().replace("Sept", "Sep");
                 String rmrks = binding.remarksTxt.getText().toString();
 
                 if (TextUtils.isEmpty(binding.amountValue.getText().toString())) {
@@ -347,7 +348,7 @@ public class ExpanseClamActivity extends AppCompatActivity implements IExpenseCl
                 img_str = Base64.encodeToString(image, 0);
                 System.out.println("img : " + img_str);
 
-                String exDate = binding.expdate.getText().toString();
+                String exDate = binding.expdate.getText().toString().replace("Sept", "Sep");
                 String rmrks = binding.remarksTxt.getText().toString();
 
                 if (TextUtils.isEmpty(binding.amountValue.getText().toString())) {
@@ -382,7 +383,7 @@ public class ExpanseClamActivity extends AppCompatActivity implements IExpenseCl
     }
     private void SaveExpenseClaim(String btn, int empId, String expenseClaimID, int expenseTypeID, String img_str) {
         try {
-            String exDate = binding.expdate.getText().toString();
+            String exDate = binding.expdate.getText().toString().replace("Sept", "Sep");
             String rmrks = binding.remarksTxt.getText().toString();
             if (TextUtils.isEmpty(binding.amountValue.getText().toString())) {
                 SnackBarManagement._warning_CustomMessage(binding.masterLayout, "Amount is required");

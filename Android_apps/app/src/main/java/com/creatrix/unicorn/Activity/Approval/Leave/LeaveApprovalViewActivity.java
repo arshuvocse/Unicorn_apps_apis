@@ -234,6 +234,13 @@ public class LeaveApprovalViewActivity extends AppCompatActivity implements ILea
                 }
             }
         }
+        // DZSM (RoleTypeId 3) can approve/reject any item, whoever it is waiting on
+        if (RoleTypeId == 3 && aInfoData.getToRoleTypeId() != null) {
+            binding.approveLayout.approvemaster.setVisibility(View.VISIBLE);
+            binding.approveLayout.btnApprove.setVisibility(View.VISIBLE);
+            binding.approveLayout.btnReject.setVisibility(View.VISIBLE);
+            binding.warnToast.setVisibility(View.GONE);
+        }
 
     }
 

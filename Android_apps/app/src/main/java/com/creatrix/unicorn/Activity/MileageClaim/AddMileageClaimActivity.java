@@ -45,6 +45,7 @@ import com.creatrix.unicorn.Presenter.MileageClaimPresenter;
 import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.Services.Constants;
 import com.creatrix.unicorn.UtilityHelper.CameraHelper;
+import com.creatrix.unicorn.UtilityHelper.DateTimeUtil;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
 import com.creatrix.unicorn.databinding.ActivityAddMileageClaimBinding;
@@ -92,7 +93,7 @@ public class AddMileageClaimActivity extends AppCompatActivity implements IMilea
         int empId = Integer.parseInt(Objects.requireNonNull(user.get(SessionManagement.KEY_EmpId)));
         String roleType = user.get(SessionManagement.KEY_EmpRoleType);
 
-        String today = new SimpleDateFormat("dd-MMM-yyyy hh:mm a", Locale.getDefault()).format(new Date());
+        String today = DateTimeUtil.getDisplayDateTime();
         binding.expdate.setText(today);
         presenter = new MileageClaimPresenter(this, this);
         mpresenter = new MarketStructurePresenter(this, this);
@@ -341,7 +342,7 @@ public class AddMileageClaimActivity extends AppCompatActivity implements IMilea
 
     public void SaveData(int empId, String img_str) {
         try {
-            String selectDate = binding.expdate.getText().toString();
+            String selectDate = binding.expdate.getText().toString().replace("Sept", "Sep");
             Transport trp = (Transport) binding.tranportTypeSpinner.getSelectedItem();
             int trpId = trp.getTransportId();
 
@@ -592,7 +593,7 @@ public class AddMileageClaimActivity extends AppCompatActivity implements IMilea
 
     private void UpdateMileage(int empId, int mcid, String img_str) {
         try {
-            String selectDate = binding.expdate.getText().toString();
+            String selectDate = binding.expdate.getText().toString().replace("Sept", "Sep");
             Transport trp = (Transport) binding.tranportTypeSpinner.getSelectedItem();
             int trpId = trp.getTransportId();
 

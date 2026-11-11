@@ -36,6 +36,7 @@ import com.creatrix.unicorn.Network.RetrofitClientInstance;
 import com.creatrix.unicorn.Presenter.CustomerListPresenter;
 import com.creatrix.unicorn.Presenter.MarketStructurePresenter;
 import com.creatrix.unicorn.R;
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
 import com.creatrix.unicorn.databinding.ActivityCustomerPendingBinding;
@@ -74,6 +75,7 @@ public class CustomerPendingActivity extends AppCompatActivity implements ICusto
     List<ModelProviderType> providertypeList;
     List<ModelSMCType> pharmatypeList;
     String selectedcustomertypeId="0", selectedprogramId="0",selectedpharmatypeId="0";
+    int loginEmpId, selectedCustomerId; // selectedCustomerId 0 = All
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,6 +89,7 @@ public class CustomerPendingActivity extends AppCompatActivity implements ICusto
         session = new SessionManagement(CustomerPendingActivity.this);
         HashMap<String, String> user = session.getUserDetails();
         empId = Integer.parseInt(Objects.requireNonNull(user.get(SessionManagement.KEY_EmpId)));
+        loginEmpId = empId;
         role = user.get(SessionManagement.KEY_EmpRoleType);
         ftm = FilterMasterBinding.inflate(getLayoutInflater());
         mkpresenter = new MarketStructurePresenter(this, CustomerPendingActivity.this);
@@ -131,6 +134,13 @@ public class CustomerPendingActivity extends AppCompatActivity implements ICusto
         ftm.filterMonthYearLayout.getRoot().setVisibility(GONE);
         ftm.linearLayoutemp.setVisibility(GONE);
         ftm.filterTypeLayout.tilDoctype.setVisibility(View.GONE);
+        // Provider / Pharma type hidden; Sales Person + Customer added (searchable, like the reports)
+        ftm.filterTypeLayout.tilProgtypetype.setVisibility(GONE);
+        ftm.filterTypeLayout.tilPharmatype.setVisibility(GONE);
+        ftm.salesPersonLay.setVisibility(VISIBLE);
+        ftm.customerLay.setVisibility(VISIBLE);
+        ReportFilterHelper.loadSalesPersons(CustomerPendingActivity.this, ftm.spinnerSalesPerson);
+        ReportFilterHelper.loadCustomers(CustomerPendingActivity.this, ftm.spinnerCustomer);
 
         CustomerType r = new CustomerType();
         r.setCustomerType("Select");
@@ -216,8 +226,20 @@ public class CustomerPendingActivity extends AppCompatActivity implements ICusto
         ftm.filterTopLayout.btnDonefilter.setOnClickListener(v -> {
             status=(String)ftm.filterStatusLayout.spinnerApprovalStatus.getSelectedItem();
             cusStats=(String)ftm.filterStatusLayout.spinnerCustomerStatus.getSelectedItem();
+            String cust = ReportFilterHelper.selectedCustomerId(ftm.spinnerCustomer);
+            selectedCustomerId = cust.isEmpty() ? 0 : Integer.parseInt(cust);
+            // a picked person reloads that person's customers (the SP scopes by his role); All = own hierarchy
+            int picked = ReportFilterHelper.selectedEmpIdOrZero(ftm.spinnerSalesPerson);
+            int newEmpId = picked == 0 ? loginEmpId : picked;
             try {
-                if (crudHelper.CheckDataInTable("tblCustomerReport")) {
+                if (newEmpId != empId) {
+                    empId = newEmpId;
+                    progressDoalog = new ProgressDialog(CustomerPendingActivity.this);
+                    progressDoalog.setMessage("Customer is Loading....");
+                    progressDoalog.show();
+                    progressDoalog.setCanceledOnTouchOutside(false);
+                    custPresenter.GetCustomerReport(empId);
+                } else if (crudHelper.CheckDataInTable("tblCustomerReport")) {
                     customerArrayList = crudHelper.getPendingCustomerFilter_SQLite(String.valueOf(selectedGrpId), String.valueOf(selectedZoneId), String.valueOf(selectedAreaId)
                             , String.valueOf(selectedTeriId), String.valueOf(selectedSTeriId), String.valueOf(selectedMarketId),status,cusStats,String.valueOf(selectedcustomertypeId),String.valueOf(selectedprogramId),String.valueOf(selectedpharmatypeId));
                     LoadinView(customerArrayList);
@@ -265,6 +287,11 @@ public class CustomerPendingActivity extends AppCompatActivity implements ICusto
         }
     }*/
     public void LoadinView(List<CustomerARModel> aList) {
+        if (aList != null && selectedCustomerId > 0) {
+            List<CustomerARModel> one = new ArrayList<>();
+            for (CustomerARModel c : aList) if (c.getCustomerMasterId() == selectedCustomerId) one.add(c);
+            aList = one;
+        }
         if (aList != null) {
             System.out.println("data area : "+aList);
             progressDoalog.dismiss();
@@ -304,7 +331,10 @@ public class CustomerPendingActivity extends AppCompatActivity implements ICusto
     }
     @Override
     public void OnErrorReport(String msg) {
-
+        if (progressDoalog != null && progressDoalog.isShowing()) {
+            progressDoalog.dismiss();
+        }
+        SnackBarManagement._error_CustomMessage(binding.masterLayout, msg);
     }
     @Override
     public void vGroup(List<Group> groupList) {

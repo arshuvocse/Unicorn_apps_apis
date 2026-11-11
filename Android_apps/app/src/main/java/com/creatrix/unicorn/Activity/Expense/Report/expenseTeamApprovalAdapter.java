@@ -145,6 +145,8 @@ public class expenseTeamApprovalAdapter extends RecyclerView.Adapter<expenseTeam
                     holder.tv_approved.setVisibility(View.GONE);
                 }
             }
+            // DZSM (RoleTypeId 3) can approve/reject any item, whoever it is waiting on
+            if (RoleTypeId == 3) holder.tv_approved.setVisibility(View.VISIBLE);
             ((etvh) holder).tv_approved.setOnClickListener(v -> {
                 click.approveKlick(elt);
             });

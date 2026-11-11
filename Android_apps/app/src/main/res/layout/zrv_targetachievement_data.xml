@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:weightSum="5"
+    android:weightSum="6"
     android:background="@color/white"
     android:layout_marginTop="-1dp"
 
@@ -54,6 +54,21 @@
         />
     <TextView
         android:id="@+id/percenTxt"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:layout_marginLeft="-1dp"
+        android:textSize="12sp"
+        android:background="@drawable/cell_shape"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:paddingRight="3dp"
+        android:paddingLeft="3dp"
+
+        />
+    <TextView
+        android:id="@+id/balanceTxt"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"

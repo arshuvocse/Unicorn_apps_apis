@@ -23,6 +23,7 @@ import com.creatrix.unicorn.Network.ApiCustomerCall;
 import com.creatrix.unicorn.Network.RetrofitClientInstance;
 import com.creatrix.unicorn.Presenter.MioDashboardPresenter;
 import com.creatrix.unicorn.R;
+import com.creatrix.unicorn.UtilityHelper.DateTimeUtil;
 import com.creatrix.unicorn.UtilityHelper.NetworkInformation;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.databinding.ActivityDashBinding;
@@ -67,8 +68,7 @@ public class ActivityDash extends AppCompatActivity implements IMioDashboard.Vie
         empId = Integer.parseInt(Objects.requireNonNull(userInfo.get(SessionManagement.KEY_EmpId)));
         RoleTypeId = userInfo.get(SessionManagement.KEY_EmpRoleTypeId);
         Date c = Calendar.getInstance().getTime();
-        SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault());
-        currentDate = df.format(c);
+        currentDate = DateTimeUtil.getDisplayDate(c);
 
         try {
             tagA = ".EmpAreaId=";

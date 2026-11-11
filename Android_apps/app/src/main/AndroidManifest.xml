@@ -21,6 +21,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" /> <!-- This permissions are neccessary for broadcast receiver -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-feature
         android:name="android.hardware.camera.any"
         android:required="true" />
@@ -76,6 +80,13 @@
         </activity>
         <activity
             android:name=".Activity.Reports.ReceiveableReportActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
+            android:name=".Activity.Reports.SalesOrderPaymentReportActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
@@ -311,6 +322,9 @@
             android:name=".Activity.SelfReports.LeaveRecordsActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".Activity.Reports.TourPlanReportActivity"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".Activity.Doctor.DoctorTourPlanActivity"
             android:screenOrientation="portrait" />
         <activity
@@ -453,6 +467,10 @@
                 <action android:name="com.creatrix.unicorn.RESTART_LOCATION_SERVICE" />
             </intent-filter>
         </receiver>
+        <receiver
+            android:name=".Services.TrackingAlarmReceiver"
+            android:enabled="true"
+            android:exported="false" />
         <service
             android:name=".Services.NotificationService2"
             android:exported="false">
@@ -473,6 +491,50 @@
                 <action android:name="android.net.wifi.STATE_CHANGE" />
             </intent-filter>
         </receiver>
+
+        <!-- ===== Continuous location tracking (package .tracking) ===== -->
+        <activity
+            android:name=".tracking.TrackingSetupActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.Tracking.Setup" />
+
+        <service
+            android:name=".tracking.LocationTrackingService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
+        <!-- Boot / app update: restore tracking if it was on. Not directBootAware: the database and
+             preferences are in credential-encrypted storage, available only after unlock. -->
+        <receiver
+            android:name=".tracking.TrackingBootReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Android Enterprise: lets the organisation make this app the Device Owner of a company device. -->
+        <receiver
+            android:name=".tracking.TrackingDeviceAdminReceiver"
+            android:exported="true"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/tracking_device_admin" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Managed configuration an EMM can push (server URL, interval, policy flags). -->
+        <meta-data
+            android:name="android.content.APP_RESTRICTIONS"
+            android:resource="@xml/tracking_app_restrictions" />
     </application>
 
 </manifest>

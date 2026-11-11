@@ -1380,6 +1380,9 @@ namespace DataLayer.Repository.Implementation
 
 
         //Second version of Campaign Code
+        /// <summary>User-facing reason set when GetOrderProductWiseCampaign returns null.</summary>
+        public string FailureReason { get; private set; }
+
         public List<OrderDetails> GetOrderProductWiseCampaign(OrderMaster orderMasters)
         {
             Response result = new Response();
@@ -3236,6 +3239,8 @@ namespace DataLayer.Repository.Implementation
             else
             {
                 aList = null;
+                FailureReason = "Two or more campaigns give a bonus on the same product in this order. "
+                              + "Please select only one campaign (or remove one of the overlapping products) and place the order again.";
             }
 
 
@@ -3292,12 +3297,16 @@ namespace DataLayer.Repository.Implementation
             if(CheckFCFS && CampainTypeId_one)
             {
                 aList = null;
+                FailureReason = "The selected first-come-first-serve campaign cannot be combined with other campaigns or products in one order. "
+                              + "Please place it as a separate order.";
             }
 
 
             if (CheckFCFS && gps)
             {
                 aList = null;
+                FailureReason = "The selected GPS Combo campaign cannot be combined with other campaigns or products in one order. "
+                              + "Please place it as a separate order.";
             }
 
             }

@@ -12,12 +12,21 @@ public class AppSetting {
 
     //live Server
     //public static String newBASE_URL = "http://103.129.247.83:81";
-  public static String newBASE_URL = "http://103.244.247.93:217";
+    //public static String newBASE_URL = "http://103.244.247.93:217/";
+    //public static String newBASE_URL = "http://203.31.169.147:983/";
+    public static String newBASE_URL = "http://103.244.247.93:217/";
+
+////////////mainnnnnnnnnnnnnnnnnn
+    // public static String newBASE_URL = "http://103.244.247.93:217/";
+
     //    public static String newBASE_URL = "http://103.198.137.179:984";
 
 
     //   public static String TPBASE_URL = "http://103.198.137.179:983";
-   public static String TPBASE_URL = "http://103.244.247.93:217";
+    //public static String TPBASE_URL = "http://103.244.247.93:217";
+    //public static String TPBASE_URL = "http://103.244.247.93:217/";
+    //public static String TPBASE_URL = "http://203.31.169.147:983/";
+    public static String TPBASE_URL = "http://103.244.247.93:217/";
     public static String newOrderProcess_URL = "http://103.244.247.93:216";
     //     public static String newOrderProcess_URL = "http://103.198.137.179:982";
 

@@ -147,6 +147,13 @@ namespace SalesSolutionWebAPI.Controllers
             return Json(_aRepo.GetDoctorList(empId));
         }
 
+        [HttpGet]
+        [Route("api/Doctor/GetDoctorCountByUser")]
+        public IHttpActionResult GetDoctorCountByUser(int empId)
+        {
+            return Json(_aRepo.GetDoctorCountByUser(empId));
+        }
+
 
         [HttpPost]
         [Route("api/Doctor/UpdateDoctorProvider")]
@@ -325,6 +332,38 @@ namespace SalesSolutionWebAPI.Controllers
             return Json(_aRepo.GetDoctorChamberForDcr(doctorId));
         }
 
+        // DCR area lock admin: empId = 0 lists every employee with a setup row; no row = locked.
+        [HttpGet]
+        [Route("api/Doctor/GetDcrAreaLock")]
+        public IHttpActionResult GetDcrAreaLock(int empId = 0)
+        {
+            return Json(_aRepo.GetDcrAreaLock(empId));
+        }
+
+        // IsLockOff = true turns the employee's DCR area lock off, false turns it back on.
+        [HttpPost]
+        [Route("api/Doctor/SaveDcrAreaLock")]
+        public IHttpActionResult SaveDcrAreaLock(DcrAreaLockDTO req)
+        {
+            return Json(_aRepo.SaveDcrAreaLock(req));
+        }
+
+        // DCR area lock (chamber geofence): IsLock = false lifts it for this chamber, true puts it back.
+        [HttpPost]
+        [Route("api/Doctor/SaveChamberLock")]
+        public IHttpActionResult SaveChamberLock(ChamberLockDTO req)
+        {
+            return Json(_aRepo.SaveChamberLock(req));
+        }
+
+        // Map button on the DCR chamber: stores the position only if the chamber has none yet
+        [HttpPost]
+        [Route("api/Doctor/SaveChamberLocation")]
+        public IHttpActionResult SaveChamberLocation(ChamberLocationDTO req)
+        {
+            return Json(_aRepo.SaveChamberLocation(req));
+        }
+
         [HttpGet]
         [Route("api/Doctor/GetProductForDcrByType")]
         public IHttpActionResult GetProductForDcrByType(int empId, string type)
@@ -343,10 +382,10 @@ namespace SalesSolutionWebAPI.Controllers
 
         [HttpGet]
         [Route("api/Doctor/GetDcrList")]
-        public IHttpActionResult GetDcrList(string empId, string FromDt, string ToDt, string providertype, string pharmatype, string doctortype)
+        public IHttpActionResult GetDcrList(string empId, string FromDt, string ToDt, string providertype, string pharmatype, string doctortype, int doctorId = 0, bool allTeam = false)
         {
 
-            return Json(_aRepo.GetDcrList(empId, FromDt, ToDt, providertype, pharmatype, doctortype));
+            return Json(_aRepo.GetDcrList(empId, FromDt, ToDt, providertype, pharmatype, doctortype, doctorId, allTeam));
         }
 
         [HttpDelete]

@@ -1,5 +1,6 @@
 package com.creatrix.unicorn.Activity.Doctor.TourePlan.Adapter;
 
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;
 import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
@@ -65,7 +66,7 @@ public class CustomerItemChkAdapter extends RecyclerView.Adapter<CustomerItemChk
         Customer dl = custList.get(position);
         if (dl != null && custList.size()>0) {
             Customer dll=new Customer();
-            holder.tv_custName.setText(dl.getCustomerName());
+            holder.tv_custName.setText(ReportFilterHelper.withCode(dl.getCustomerCode(), dl.getCustomerName()));
             holder.chkitm.setOnClickListener(v -> {
                 if (holder.chkitm.isChecked()) {
                     dll.setCustomerMasterId(dl.getCustomerMasterId());

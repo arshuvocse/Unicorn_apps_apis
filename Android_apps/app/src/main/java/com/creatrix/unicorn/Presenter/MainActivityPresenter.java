@@ -58,9 +58,9 @@ public class MainActivityPresenter implements LoginInterface.Presenter {
 
                         String twoDeviceMessage = user.getTwoDeviceMsg();
                         if (twoDeviceMessage != null && !twoDeviceMessage.trim().isEmpty()) {
-                            loginView.OnError("Maximum Two Device Allowed!!");
+                            loginView.OnError(twoDeviceMessage);
                         } else {
-                            loginView.OnError("You Login Name and Password do not match");
+                            loginView.OnError("Login Name and Password do not match");
                         }
                     } else {
                         int usid = user.getUserId();
@@ -93,8 +93,15 @@ public class MainActivityPresenter implements LoginInterface.Presenter {
                         loginView.OnError("Slow Connection Detected. Please try again");
                     }else if (t instanceof UnknownServiceException) {
                         loginView.OnError("Server HTTP connection is blocked. Please update network settings.");
+                    }else if (t instanceof java.net.UnknownHostException || t instanceof java.net.ConnectException
+                            || t instanceof java.net.NoRouteToHostException) {
+                        // the phone has data but cannot reach the server: operator/WiFi blocking, or DNS
+                        loginView.OnError("Cannot reach the server from this network. Please switch mobile data/WiFi and try again.");
+                    }else if (t instanceof com.google.gson.JsonParseException
+                            || t instanceof com.google.gson.stream.MalformedJsonException || t instanceof java.io.EOFException) {
+                        loginView.OnError("Server sent an invalid response. Please contact Admin. (" + t.getClass().getSimpleName() + ")");
                     }else{
-                        loginView.OnError("Slow Connection Detected With Network. Please try again");
+                        loginView.OnError("Login failed: " + t.getClass().getSimpleName() + ". Please try again");
                     }
                 }
             });

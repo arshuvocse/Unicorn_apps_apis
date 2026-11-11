@@ -1,0 +1,12 @@
+# Windows-container compose for the Sales API. Requires Docker Desktop in "Windows containers" mode.
+# 1) build the project with MSBuild (populates SalesSolutionWebAPI\bin)
+# 2) docker compose up --build   ->  http://localhost:9800
+services:
+  salesapi:
+    build: .
+    image: unicorn-salesapi:local
+    ports:
+      - "9800:80"
+    environment:
+      # host SQL Server (NASA-PC\MSSQLSERVER2019 listens on TCP 1433); use server,port form so no SQL Browser is needed
+      UNICORN_SQL_DATASOURCE: host.docker.internal,1433

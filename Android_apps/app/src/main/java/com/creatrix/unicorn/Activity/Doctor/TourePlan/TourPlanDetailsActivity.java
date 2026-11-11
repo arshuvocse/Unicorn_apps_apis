@@ -1,5 +1,6 @@
 package com.creatrix.unicorn.Activity.Doctor.TourePlan;
 
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -1120,14 +1121,7 @@ public class TourPlanDetailsActivity extends AppCompatActivity implements IMarke
     private void filter(String word) {
         List<Customer> filterwordlist = new ArrayList<>();
         for (Customer words : aCustomerList) {
-            if (words.getCustomerName() == null) {
-                try {
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            if (words.getCustomerName().toLowerCase().contains(word.toLowerCase())) {
+            if (ReportFilterHelper.matches(words.getCustomerCode(), words.getCustomerName(), word)) {
                 filterwordlist.add(words);
             }
         }

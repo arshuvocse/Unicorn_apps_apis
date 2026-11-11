@@ -19,6 +19,7 @@ import com.creatrix.unicorn.DBAdapter.DBCrudHelper;
 import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.Activity.SelfReports.ReportsDcrActivity;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
+import com.creatrix.unicorn.Activity.Reports.SalesOrderPaymentReportActivity;
 import com.creatrix.unicorn.databinding.ActivityReportsBinding;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -149,6 +150,15 @@ public class ReportsActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(ReportsActivity.this, ReportsDcrActivity.class);
+                startActivity(i);
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            }
+        });
+
+        viewBinding.btnSalesOrderPaymentReport.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(ReportsActivity.this, SalesOrderPaymentReportActivity.class);
                 startActivity(i);
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
             }

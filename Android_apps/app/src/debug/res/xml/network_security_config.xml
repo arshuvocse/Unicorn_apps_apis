@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TEMPORARY test overlay: also allows cleartext to the adb-reversed local mock server. -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">203.31.169.147</domain>
+        <domain includeSubdomains="true">103.244.247.93</domain>
+        <domain includeSubdomains="true">104.215.157.203</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">localhost</domain>
+    </domain-config>
+</network-security-config>

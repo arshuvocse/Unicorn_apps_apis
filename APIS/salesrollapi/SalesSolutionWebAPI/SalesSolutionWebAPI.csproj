@@ -436,6 +436,7 @@
     <Compile Include="Controllers\TADAController.cs" />
     <Compile Include="Controllers\TestController.cs" />
     <Compile Include="Controllers\TourPlanController.cs" />
+    <Compile Include="Controllers\TrackingController.cs" />
     <Compile Include="Controllers\UserController.cs" />
     <Compile Include="Controllers\UserPermissionController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
@@ -485,6 +486,7 @@
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\AppInfo.cs" />
     <Compile Include="Models\Attendance.cs" />
+    <Compile Include="Models\ResolveLocation.cs" />
     <Compile Include="Models\AttendanceLog.cs" />
     <Compile Include="Models\CompanyUnit.cs" />
     <Compile Include="Models\CompanyUnitInfo.cs" />
@@ -541,6 +543,7 @@
     <Compile Include="Repository\ProductDAL.cs" />
     <Compile Include="Repository\ReportsDAL.cs" />
     <Compile Include="Repository\SeedDataDAL.cs" />
+    <Compile Include="Repository\CellTowerDAL.cs" />
     <Compile Include="Repository\TourPlanDAL.cs" />
     <Compile Include="Repository\UserDAL.cs" />
     <Compile Include="Repository\UserPermissionDAL.cs" />
@@ -554,6 +557,7 @@
     <Content Include="DatabaseScripts\fix_tblProviderDropoutIntrigration_AutoGenerateId.sql" />
     <Content Include="DatabaseScripts\fix_DoctorSaveApi.sql" />
     <Content Include="DatabaseScripts\sp_Webapi_Get_AttendanceInfo.sql" />
+    <Content Include="DatabaseScripts\cell_tower_location.sql" />
     <Content Include="DatabaseScripts\sp_Webapi_Get_LiveTracking.sql" />
     <Content Include="DatabaseScripts\sp_Webapi_UpdateDoctorLocation.sql" />
     <Content Include="DatabaseScripts\sp_webapi_SavePunchTotalInfo.sql" />

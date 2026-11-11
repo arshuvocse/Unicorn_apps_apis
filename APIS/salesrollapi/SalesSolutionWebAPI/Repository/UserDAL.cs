@@ -1,4 +1,4 @@
-﻿using SalesSolutionWebAPI.DataManager;
+using SalesSolutionWebAPI.DataManager;
 using SalesSolutionWebAPI.Interface;
 using SalesSolutionWebAPI.Models;
 using System;
@@ -47,10 +47,8 @@ namespace SalesSolutionWebAPI.Repository
                 aSqlParameterList.Add(new SqlParameter("@OS_Version", OS_Version));
                 aSqlParameterList.Add(new SqlParameter("@AppVersion", AppVersion));
                 DataTable dr = accessManager.GetDataTable("sp_SalesAPI_doLogin_New", aSqlParameterList);
-                DataTable dt = accessManager.GetDataTable("sp_SalesAPI_doLoginCheckEMI", aSqlParameterList);
-                DataTable dtMatch = accessManager.GetDataTable("sp_SalesAPI_doLoginMatch", aSqlParameterList);
-              
-                    if (dr.Rows.Count > 0)
+
+                if (dr.Rows.Count > 0 && dr.Rows[0]["UserId"] != DBNull.Value && Convert.ToInt32(dr.Rows[0]["UserId"]) > 0)
                 {
 
                     UserInfoList.UserId = (int)dr.Rows[0]["UserId"];
@@ -130,14 +128,15 @@ namespace SalesSolutionWebAPI.Repository
 
                 }
 
-                if (dtMatch.Rows.Count == 0)
+                else if (dr.Rows.Count > 0 && dr.Rows[0]["TwoDeviceMsg"] != DBNull.Value)
                 {
-                    UserInfoList.TwoDeviceMsg = "";
+                    UserInfoList.UserId = 0;
+                    UserInfoList.TwoDeviceMsg = dr.Rows[0]["TwoDeviceMsg"].ToString();
                 }
-
-                else if (dt.Rows.Count == 0)
+                else
                 {
-                    UserInfoList.TwoDeviceMsg = "Maximum Allowed Two Devices";
+                    UserInfoList.UserId = 0;
+                    UserInfoList.TwoDeviceMsg = "User Not Found";
                 }
 
                 

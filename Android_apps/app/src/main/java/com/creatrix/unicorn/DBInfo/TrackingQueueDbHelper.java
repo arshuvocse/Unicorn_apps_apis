@@ -13,7 +13,8 @@ import java.util.List;
 
 public class TrackingQueueDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "tracking_queue.db";
-    private static final int DATABASE_VERSION = 1;
+    // v2: latitude/longitude became nullable ("no location" points are queued too).
+    private static final int DATABASE_VERSION = 2;
     private static final String TABLE_NAME = "pending_tracking";
 
     public TrackingQueueDbHelper(Context context) {
@@ -22,11 +23,15 @@ public class TrackingQueueDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE " + TABLE_NAME + " (" +
+        createTable(db, TABLE_NAME);
+    }
+
+    private static void createTable(SQLiteDatabase db, String name) {
+        db.execSQL("CREATE TABLE " + name + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "emp_info_id INTEGER NOT NULL," +
-                "latitude TEXT NOT NULL," +
-                "longitude TEXT NOT NULL," +
+                "latitude TEXT," +
+                "longitude TEXT," +
                 "address TEXT," +
                 "time_str TEXT," +
                 "track_date TEXT," +
@@ -35,7 +40,20 @@ public class TrackingQueueDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // No migrations yet.
+        if (oldVersion < 2) {
+            // SQLite cannot drop NOT NULL in place: rebuild the table and keep the queued rows.
+            db.beginTransaction();
+            try {
+                createTable(db, TABLE_NAME + "_v2");
+                db.execSQL("INSERT INTO " + TABLE_NAME + "_v2 (id, emp_info_id, latitude, longitude, address, time_str, track_date, created_at) " +
+                        "SELECT id, emp_info_id, latitude, longitude, address, time_str, track_date, created_at FROM " + TABLE_NAME);
+                db.execSQL("DROP TABLE " + TABLE_NAME);
+                db.execSQL("ALTER TABLE " + TABLE_NAME + "_v2 RENAME TO " + TABLE_NAME);
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+        }
     }
 
     public long enqueue(UserTracking tracking) {
@@ -50,13 +68,14 @@ public class TrackingQueueDbHelper extends SQLiteOpenHelper {
         return getWritableDatabase().insertOrThrow(TABLE_NAME, null, values);
     }
 
-    public List<PendingTracking> getPending(int limit) {
+    /** Oldest-first rows with id greater than afterId (lets the uploader skip a row the server rejects). */
+    public List<PendingTracking> getPending(long afterId, int limit) {
         List<PendingTracking> result = new ArrayList<>();
         try (Cursor cursor = getReadableDatabase().query(
                 TABLE_NAME,
-                new String[]{"id", "emp_info_id", "latitude", "longitude", "address", "time_str", "track_date"},
-                null,
-                null,
+                new String[]{"id", "emp_info_id", "latitude", "longitude", "address", "time_str", "track_date", "created_at"},
+                "id > ?",
+                new String[]{String.valueOf(afterId)},
                 null,
                 null,
                 "id ASC",
@@ -69,10 +88,14 @@ public class TrackingQueueDbHelper extends SQLiteOpenHelper {
                 tracking.setAddressName(cursor.getString(4));
                 tracking.setTimeStr(cursor.getString(5));
                 tracking.setTrackDate(cursor.getString(6));
-                result.add(new PendingTracking(cursor.getLong(0), tracking));
+                result.add(new PendingTracking(cursor.getLong(0), tracking, cursor.getLong(7)));
             }
         }
         return result;
+    }
+
+    public List<PendingTracking> getPending(int limit) {
+        return getPending(0, limit);
     }
 
     public void delete(long id) {
@@ -82,10 +105,12 @@ public class TrackingQueueDbHelper extends SQLiteOpenHelper {
     public static class PendingTracking {
         private final long id;
         private final UserTracking tracking;
+        private final long createdAt;
 
-        PendingTracking(long id, UserTracking tracking) {
+        PendingTracking(long id, UserTracking tracking, long createdAt) {
             this.id = id;
             this.tracking = tracking;
+            this.createdAt = createdAt;
         }
 
         public long getId() {
@@ -94,6 +119,10 @@ public class TrackingQueueDbHelper extends SQLiteOpenHelper {
 
         public UserTracking getTracking() {
             return tracking;
+        }
+
+        public long getCreatedAt() {
+            return createdAt;
         }
     }
 }

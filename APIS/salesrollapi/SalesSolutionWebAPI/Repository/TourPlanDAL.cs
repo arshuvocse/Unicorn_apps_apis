@@ -3045,6 +3045,23 @@ namespace SalesSolutionWebAPI.Repository
 
         }
 
+        public DataTable GetDayWiseTourPlan(int empId, int month, int year)
+        {
+            try
+            {
+                accessManager.SqlConnectionOpen(DataBase.SalesDisDB);
+                List<SqlParameter> aSqlParameterlist = new List<SqlParameter>();
+                aSqlParameterlist.Add(new SqlParameter("@EmpInfoId", empId));
+                aSqlParameterlist.Add(new SqlParameter("@Month", month));
+                aSqlParameterlist.Add(new SqlParameter("@Year", year));
+                return accessManager.GetDataTable("sp_Webapi_Get_DayWiseTourPlan", aSqlParameterlist);
+            }
+            finally
+            {
+                accessManager.SqlConnectionClose();
+            }
+        }
+
         public ResultInfo SaveDayWiseTourPlan(DayWiseTourPlanDTO req)
         {
             ResultInfo result = new ResultInfo();
@@ -3057,6 +3074,7 @@ namespace SalesSolutionWebAPI.Repository
                 gSqlParameterList.Add(new SqlParameter("@IsFinalSubmit", req.IsFinalSubmit));
                 gSqlParameterList.Add(new SqlParameter("@CustomerIds", req.CustomerIds != null ? string.Join(",", req.CustomerIds) : ""));
                 gSqlParameterList.Add(new SqlParameter("@DoctorIds", req.DoctorIds != null ? string.Join(",", req.DoctorIds) : ""));
+                gSqlParameterList.Add(new SqlParameter("@DoctorChamberIds", req.DoctorChambers != null ? string.Join(",", req.DoctorChambers.Select(d => d.DoctorId + ":" + d.ChamberId)) : ""));
 
                 DataTable dt = accessManager.GetDataTable("sp_Webapi_Save_DayWiseTourPlan", gSqlParameterList);
                 if (dt != null && dt.Rows.Count > 0)

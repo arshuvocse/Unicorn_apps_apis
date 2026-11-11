@@ -93,7 +93,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_doctor_form_field"
-                        android:inputType="textPostalAddress"
+                        android:inputType="textMultiLine"
                         android:minHeight="54dp"
                         android:paddingStart="14dp"
                         android:paddingEnd="14dp" />
@@ -176,6 +176,12 @@
 
                 </LinearLayout>
 
+                <LinearLayout
+                    android:id="@+id/reorderSection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
                 <RelativeLayout
                     android:id="@+id/degreeSection"
                     android:layout_width="match_parent"
@@ -207,7 +213,8 @@
                         android:id="@+id/degreeAdd"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
+                        android:layout_marginEnd="8dp"
+                        android:layout_toStartOf="@+id/degreeDrag"
                         android:clickable="true"
                         android:src="@drawable/ic_baseline_add_24"
                         android:focusable="true" />
@@ -221,10 +228,20 @@
                         android:padding="5dp"
                         android:textColor="@color/black" />
 
+                    <ImageView
+                        android:id="@+id/degreeDrag"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_alignParentEnd="true"
+                        android:contentDescription="@string/tag_reorder_hint"
+                        android:src="@drawable/ic_drag_handle"
+                        android:tag="dragHandle"
+                        android:tint="@color/darker_gray" />
 
                 </RelativeLayout>
 
                 <RelativeLayout
+                    android:id="@+id/specialitySection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="8dp"
@@ -253,7 +270,8 @@
                         android:id="@+id/specialityAdd"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentRight="true"
+                        android:layout_marginEnd="8dp"
+                        android:layout_toStartOf="@+id/specialityDrag"
                         android:src="@drawable/ic_baseline_add_24" />
 
                     <TextView
@@ -267,8 +285,191 @@
 
                         />
 
+                    <ImageView
+                        android:id="@+id/specialityDrag"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_alignParentEnd="true"
+                        android:contentDescription="@string/tag_reorder_hint"
+                        android:src="@drawable/ic_drag_handle"
+                        android:tag="dragHandle"
+                        android:tint="@color/darker_gray" />
 
                 </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/brandSection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginRight="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/bg_doctor_form_field"
+                    android:elevation="3dp"
+                    android:orientation="vertical"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:id="@+id/brandLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:text="@string/brand"
+                        android:textColor="@color/black"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/latoregular"
+                        />
+
+                    <ImageView
+                        android:id="@+id/brandAdd"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:layout_toStartOf="@+id/brandDrag"
+                        android:src="@drawable/ic_baseline_add_24" />
+
+                    <TextView
+                        android:id="@+id/brandListStr"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/brandLabel"
+                        android:layout_marginTop="5dp"
+                        android:padding="5dp"
+                        android:textColor="@color/black" />
+
+                    <ImageView
+                        android:id="@+id/brandDrag"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_alignParentEnd="true"
+                        android:contentDescription="@string/tag_reorder_hint"
+                        android:src="@drawable/ic_drag_handle"
+                        android:tag="dragHandle"
+                        android:tint="@color/darker_gray" />
+
+                </RelativeLayout>
+
+                <LinearLayout
+                    android:id="@+id/specialDaySection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginRight="8dp"
+                    android:background="@drawable/bg_doctor_form_field"
+                    android:elevation="3dp"
+                    android:orientation="vertical"
+                    android:padding="10dp">
+
+                    <ImageView
+                        android:id="@+id/specialDayDrag"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="end"
+                        android:contentDescription="@string/tag_reorder_hint"
+                        android:src="@drawable/ic_drag_handle"
+                        android:tag="dragHandle"
+                        android:tint="@color/darker_gray" />
+
+
+                   <!-- <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:weightSum="3">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Special Day"
+                            android:textColor="@color/black" />
+
+                        <Spinner
+                            android:id="@+id/spcialdayTypeSpinner"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="2" />
+                    </LinearLayout>-->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/tag_special_day">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/spcialdayTypeSpinner"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:inputType="none"
+                            android:completionThreshold="1"
+                            android:singleLine="true"
+                            android:padding="10dp"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="4dp"
+                        android:id="@+id/rv_specialdaylist"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        tools:itemCount="2"
+                        />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5sp"
+                        android:background="@color/white"
+                        android:elevation="6dp"
+                        android:gravity="center"
+                        android:visibility="gone"
+                        android:orientation="horizontal"
+                        android:padding="8dp"
+                        >
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/tag_date"
+                            android:textSize="14sp"
+                            android:fontFamily="@font/latoregular"/>
+
+                        <TextView
+                            android:id="@+id/scecialdateTxt"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/dash"
+                            android:gravity="center"
+                            android:layout_marginStart="4dp"
+                            android:textColor="@color/main" />
+
+                        <ImageView
+                            android:id="@+id/datePickerDocDate"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_calendar"
+
+
+                            />
+
+                    </LinearLayout>
+
+                 <!--   <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Special Day">
+
+                        <EditText
+                            android:id="@+id/scecialdateTxt"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                    </com.google.android.material.textfield.TextInputLayout>
+-->
+
+                </LinearLayout>
+                </LinearLayout>
 
                 <!--  <RelativeLayout
                       android:layout_width="match_parent"
@@ -353,47 +554,6 @@
                         android:textColor="@color/black" />
 
                 </RelativeLayout>
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginRight="8dp"
-                    android:layout_marginBottom="8dp"
-                    android:background="@drawable/bg_doctor_form_field"
-                    android:elevation="3dp"
-                    android:orientation="vertical"
-                    android:padding="10dp">
-
-                    <TextView
-                        android:id="@+id/brandLabel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:text="@string/brand"
-                        android:textColor="@color/black"
-                        android:textSize="14sp"
-                        android:fontFamily="@font/latoregular"
-                        />
-
-                    <ImageView
-                        android:id="@+id/brandAdd"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentRight="true"
-                        android:src="@drawable/ic_baseline_add_24" />
-
-                    <TextView
-                        android:id="@+id/brandListStr"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@+id/brandLabel"
-                        android:layout_marginTop="5dp"
-                        android:padding="5dp"
-                        android:textColor="@color/black" />
-
-                </RelativeLayout>
             </LinearLayout>
 
 
@@ -462,6 +622,7 @@
                             android:id="@+id/chamberSpinner"
                             android:layout_width="match_parent"
                             android:layout_height="48dp"
+                            android:inputType="none"
                             android:completionThreshold="1"
                             android:singleLine="true"
                             android:padding="10dp"/>
@@ -554,6 +715,7 @@
                                 android:id="@+id/contactTypeSpinner"
                                 android:layout_width="match_parent"
                                 android:layout_height="48dp"
+                                android:inputType="none"
                                 android:completionThreshold="1"
                                 android:singleLine="true"
                                 android:padding="10dp"/>
@@ -643,112 +805,6 @@
 
                 </LinearLayout>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginRight="8dp"
-                    android:background="@color/white"
-                    android:elevation="3dp"
-                    android:orientation="vertical"
-                    android:padding="10dp">
-
-                   <!-- <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:weightSum="3">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Special Day"
-                            android:textColor="@color/black" />
-
-                        <Spinner
-                            android:id="@+id/spcialdayTypeSpinner"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="2" />
-                    </LinearLayout>-->
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/tag_special_day">
-
-                        <AutoCompleteTextView
-                            android:id="@+id/spcialdayTypeSpinner"
-                            android:layout_width="match_parent"
-                            android:layout_height="48dp"
-                            android:completionThreshold="1"
-                            android:singleLine="true"
-                            android:padding="10dp"/>
-                    </com.google.android.material.textfield.TextInputLayout>
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:layout_marginStart="4dp"
-                        android:layout_marginEnd="4dp"
-                        android:id="@+id/rv_specialdaylist"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        tools:itemCount="2"
-                        />
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_margin="5sp"
-                        android:background="@color/white"
-                        android:elevation="6dp"
-                        android:gravity="center"
-                        android:visibility="gone"
-                        android:orientation="horizontal"
-                        android:padding="8dp"
-                        >
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/tag_date"
-                            android:textSize="14sp"
-                            android:fontFamily="@font/latoregular"/>
-
-                        <TextView
-                            android:id="@+id/scecialdateTxt"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/dash"
-                            android:gravity="center"
-                            android:layout_marginStart="4dp"
-                            android:textColor="@color/main" />
-
-                        <ImageView
-                            android:id="@+id/datePickerDocDate"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:src="@drawable/ic_calendar"
-
-
-                            />
-
-                    </LinearLayout>
-
-                 <!--   <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="Special Day">
-
-                        <EditText
-                            android:id="@+id/scecialdateTxt"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content" />
-                    </com.google.android.material.textfield.TextInputLayout>
--->
-
-                </LinearLayout>
                 <!--  <LinearLayout
                       android:layout_width="match_parent"
                       android:layout_height="wrap_content"

@@ -43,6 +43,7 @@ import com.creatrix.unicorn.Network.RetrofitClientInstanceAttendance;
 import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.RecyclerAdapter._tourForTADAClaim_Recyler;
 import com.creatrix.unicorn.UtilityHelper.CameraHelper;
+import com.creatrix.unicorn.UtilityHelper.DateTimeUtil;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
 import com.creatrix.unicorn.databinding.ActivityTADAClaimBinding;
@@ -114,8 +115,7 @@ public class TADAClaimActivity extends AppCompatActivity implements ChkItemListe
 
         Date c = Calendar.getInstance().getTime();
         System.out.println("Current time => " + c);
-        SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault());
-        String formattedDate = df.format(c);
+        String formattedDate = DateTimeUtil.getDisplayDate(c);
         GetTourForTada(empId, formattedDate);
         // GetTadaAmount(userId);
         binding.presdate.setText(formattedDate);

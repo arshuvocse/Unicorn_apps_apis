@@ -21,6 +21,10 @@ namespace DataLayer.Models
         public string PaymentType { get; set; }
         public string PaymentDate { get; set; }
         public double TpPercentage { get; set; }
+        // where the order was submitted from (app GPS); optional
+        public string Latitude { get; set; }
+        public string Longitude { get; set; }
+        public string StreetAddress { get; set; }
 
 
         public List<OrderDetails> OrderDetails { get; set; }

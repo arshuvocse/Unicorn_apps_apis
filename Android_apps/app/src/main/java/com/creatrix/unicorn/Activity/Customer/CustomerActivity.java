@@ -27,8 +27,6 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.Editable;
-import android.text.InputFilter;
-import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Base64;
@@ -89,6 +87,7 @@ import com.creatrix.unicorn.Presenter.MarketStructurePresenter;
 import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.Services.Constants;
 import com.creatrix.unicorn.UtilityHelper.CameraHelper;
+import com.creatrix.unicorn.UtilityHelper.LocationGuard;
 import com.creatrix.unicorn.UtilityHelper.NetworkInformation;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
@@ -154,6 +153,7 @@ public class CustomerActivity extends AppCompatActivity implements LocationListe
     Uri imageuri, timageuri;
     File imgFile, timgFile;
     Double lat, lon;
+    Location lastFix;
     String address = "";
     CustomerApprovalList cal;
     CustomerSvModel csv;
@@ -162,8 +162,6 @@ public class CustomerActivity extends AppCompatActivity implements LocationListe
     int custmasterid;
     String edit_dName, path, tpath;
 
-    public String blockCharacterSet = "@~'#^|$%&*!/?>";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -171,11 +169,6 @@ public class CustomerActivity extends AppCompatActivity implements LocationListe
         viewBinding = com.creatrix.unicorn.databinding.ActivityCustomerBinding.inflate(getLayoutInflater());
         View mainView = viewBinding.getRoot();
         setContentView(mainView);
-        //Blocking Special char
-        viewBinding.customerName.setFilters(new InputFilter[]{filter});
-        viewBinding.address.setFilters(new InputFilter[]{filter});
-        viewBinding.cmistOwnerName.setFilters(new InputFilter[]{filter});
-        viewBinding.cmistTradeLicense.setFilters(new InputFilter[]{filter});
         viewBinding.changeptype.setOnClickListener(v -> showSelectDialog());
 
         // dbCrudHelper = new DBCrudHelper(CustomerActivity.this);
@@ -475,6 +468,10 @@ public class CustomerActivity extends AppCompatActivity implements LocationListe
                             SnackBarManagement._warning_CustomMessage(viewBinding.masterLayoutId, "Name is required");
                             return;
                         }
+                        if (TextUtils.isEmpty(viewBinding.address.getText().toString().trim())) {
+                            SnackBarManagement._warning_CustomMessage(viewBinding.masterLayoutId, "Address is required");
+                            return;
+                        }
                         if (viewBinding.custTypeSpinner.getSelectedItemPosition() == 0) {
                             SnackBarManagement._warning_CustomMessage(viewBinding.masterLayoutId, "Customer Type is required");
                             return;
@@ -763,6 +760,10 @@ public class CustomerActivity extends AppCompatActivity implements LocationListe
                 SnackBarManagement._warning_CustomMessage(viewBinding.masterLayoutId, "Name is required");
                 return;
             }
+            if (TextUtils.isEmpty(viewBinding.address.getText().toString().trim())) {
+                SnackBarManagement._warning_CustomMessage(viewBinding.masterLayoutId, "Address is required");
+                return;
+            }
             if (viewBinding.custTypeSpinner.getSelectedItemPosition() == 0) {
                 SnackBarManagement._warning_CustomMessage(viewBinding.masterLayoutId, "Customer Type is required");
                 return;
@@ -972,8 +973,14 @@ else {
                 csm.setMarketId(selectedMarketId);
             }
             //csm.setMarketId(selectedMarketId);
-            if (lat == null && lon == null) {
-                SnackBarManagement._warning_CustomMessage(viewBinding.masterLayoutId, "Your Latitude and Longitude Getting Null.Try Again");
+            // Strict location rule: precise permission + GPS on + fresh, accurate, non-mock fix.
+            String locationError = LocationGuard.checkEnvironment(this);
+            if (locationError == null) {
+                locationError = LocationGuard.checkFix(lastFix);
+            }
+            if (locationError != null) {
+                getCLocation(); // refresh so the next attempt has a new fix
+                SnackBarManagement._warning_CustomMessage(viewBinding.masterLayoutId, locationError);
                 return;
             } else {
                 csm.setLatitude(String.valueOf(lat));
@@ -1446,12 +1453,19 @@ else {
 
 
     public void getCLocation() {
-        try {
-            locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 500, 5, (LocationListener) this);
-        } catch (SecurityException e) {
-            e.printStackTrace();
-        }
+        LocationGuard.requestFix(this, (location, error) -> {
+            if (location == null) {
+                lastFix = null;
+                lat = null;
+                lon = null;
+                Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+                return;
+            }
+            lastFix = location;
+            lat = location.getLatitude();
+            lon = location.getLongitude();
+            address = LocationGuard.addressOf(this, location);
+        });
     }
 
     @Override
@@ -1474,16 +1488,6 @@ else {
         }
         return 0;
     }
-
-    private InputFilter filter = new InputFilter() {
-        @Override
-        public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
-            if (source != null && blockCharacterSet.contains(("" + source))) {
-                return "";
-            }
-            return null;
-        }
-    };
 
     @Override
     public void vDivL(List<DivisionVM> divList) {

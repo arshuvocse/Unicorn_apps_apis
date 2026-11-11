@@ -280,6 +280,13 @@ public class VisitPlanApprovalActivity extends AppCompatActivity implements IVPA
                 }
 
             }
+            // DZSM (RoleTypeId 3) can approve/reject any item, whoever it is waiting on
+            if (RoleTypeId == 3) {
+                binding.linearLayout5.setVisibility(View.VISIBLE);
+                binding.btnApprove.setVisibility(View.VISIBLE);
+                binding.btnReject.setVisibility(View.VISIBLE);
+                binding.warnToast.setVisibility(View.GONE);
+            }
             if(aList.get(0).getStatus().equals("Accepted"))
             {
                 binding.warnToast.setVisibility(View.GONE);

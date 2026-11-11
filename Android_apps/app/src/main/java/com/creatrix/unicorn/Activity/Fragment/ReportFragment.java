@@ -24,6 +24,8 @@ import com.creatrix.unicorn.Activity.ProductViewActivity;
 import com.creatrix.unicorn.Activity.Reports.DWSPReportActivity;
 import com.creatrix.unicorn.Activity.Reports.LedgerReportActivity;
 import com.creatrix.unicorn.Activity.Reports.ReceiveableReportActivity;
+import com.creatrix.unicorn.Activity.Reports.SalesOrderPaymentReportActivity;
+import com.creatrix.unicorn.Activity.Reports.TourPlanReportActivity;
 import com.creatrix.unicorn.Activity.SelfReports.ExpenseSummery.ExpenseSummeryActivity;
 import com.creatrix.unicorn.Activity.SelfReports.LeaveRecordsActivity;
 import com.creatrix.unicorn.Activity.MileageClaim.Report.MileageClaimListActivity;
@@ -136,6 +138,11 @@ public class ReportFragment extends Fragment {
             startActivity(i);
             requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         });
+        viewBinding.btnSalesOrderPaymentReport.setOnClickListener(v -> {
+            Intent i = new Intent(getActivity(), SalesOrderPaymentReportActivity.class);
+            startActivity(i);
+            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
         viewBinding.btnExpensesumClick.setOnClickListener(v -> {
             Intent i = new Intent(getActivity(), ExpenseSummeryActivity.class);
             startActivity(i);
@@ -220,6 +227,12 @@ public class ReportFragment extends Fragment {
         });
 
 
+
+        viewBinding.btnTourPlanReport.setOnClickListener(v -> {
+            Intent i = new Intent(getActivity(), TourPlanReportActivity.class);
+            startActivity(i);
+            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
 
         viewBinding.btnLedger.setOnClickListener(v -> {
             Intent i = new Intent(getActivity(), LedgerReportActivity.class);

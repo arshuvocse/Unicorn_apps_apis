@@ -22,6 +22,7 @@ public interface IAttendance {
         void button(int empid);
         void getShiftCategoryList(int empId);
         void saveShiftCategory(int empId, String shiftCategory);
+        void getPunchWindow(int empId);
     }
     interface View {
         void onSuccessapprove(boolean t);
@@ -32,5 +33,7 @@ public interface IAttendance {
         void onButtonView(ButtonRP buttonRP);
         void onShiftCategoryListSuccess(List<ShiftCategory> categories);
         void onSaveShiftCategorySuccess(ResultInfo resultInfo);
+        // Only AttendanceActivity uses the punch-in window; other views ignore it.
+        default void onPunchWindow(com.creatrix.unicorn.Activity.Attendance.Model.PunchWindow window) {}
     }
 }

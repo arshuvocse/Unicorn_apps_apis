@@ -1,5 +1,6 @@
 package com.creatrix.unicorn.Activity.Doctor.VisitPlan;
 
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;
 import android.app.Activity;
 import android.content.Context;
 
@@ -77,7 +78,7 @@ public class DoctorItemChkAdapter extends RecyclerView.Adapter<DoctorItemChkAdap
         if (dl != null && docList.size()>0) {
             DoctorListViewModel dll=new DoctorListViewModel();
             //holder.tv_docName.setText(dl.getDoctorName());
-            holder.chkitm.setText(dl.getDoctorName());
+            holder.chkitm.setText(ReportFilterHelper.withCode(dl.getDoctorCode(), dl.getDoctorName()));
 
             holder.chkitm.setOnClickListener(v -> {
                 if (holder.chkitm.isChecked()) {

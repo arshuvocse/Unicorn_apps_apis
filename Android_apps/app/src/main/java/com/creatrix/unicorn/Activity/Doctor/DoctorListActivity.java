@@ -1,5 +1,6 @@
 package com.creatrix.unicorn.Activity.Doctor;
 
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
@@ -68,6 +69,7 @@ import com.creatrix.unicorn.RecyclerAdapter._doctor_listRecyclerAdapter;
 import com.creatrix.unicorn.UtilityHelper.NetworkInformation;
 import com.creatrix.unicorn.UtilityHelper.LocationAccess;
 import com.creatrix.unicorn.UtilityHelper.LocationGet;
+import com.creatrix.unicorn.UtilityHelper.LocationGuard;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
 import com.creatrix.unicorn.UtilityHelper.UtilityHelper;
@@ -284,9 +286,11 @@ public class DoctorListActivity extends AppCompatActivity implements IMarketStra
     }
     private void filter(String aName) {
         try {
+            String key = aName.toLowerCase();
             List<DoctorListViewModel> arrayList = new ArrayList<>();
             for (DoctorListViewModel item : aList) {
-                if ((item.getDoctorName().toLowerCase().contains(aName.toLowerCase()) || (item.getDoctorCode().contains(aName)))) {
+                String chamber = item.getChemberName() == null ? "" : item.getChemberName().toLowerCase();
+                if (ReportFilterHelper.matches(item.getDoctorCode(), item.getDoctorName(), aName) || chamber.contains(key)) {
                     arrayList.add(item);
                 }
             }
@@ -428,12 +432,16 @@ public class DoctorListActivity extends AppCompatActivity implements IMarketStra
     }
 
     private void saveDoctorCurrentLocation(DoctorListViewModel doctor) {
-        Location location = LocationGet.getLastKnownLocation(this);
-        if (location == null) {
-            Toast.makeText(this, "Location not found. Please try again", Toast.LENGTH_LONG).show();
-            return;
-        }
+        LocationGuard.requestFix(this, (location, error) -> {
+            if (location == null) {
+                Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+                return;
+            }
+            saveDoctorLocationFix(doctor, location);
+        });
+    }
 
+    private void saveDoctorLocationFix(DoctorListViewModel doctor, Location location) {
         String latitude = String.valueOf(location.getLatitude());
         String longitude = String.valueOf(location.getLongitude());
         String address = getCompleteAddressString(location.getLatitude(), location.getLongitude());

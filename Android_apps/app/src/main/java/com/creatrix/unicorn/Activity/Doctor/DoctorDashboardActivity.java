@@ -23,6 +23,7 @@ import com.creatrix.unicorn.Presenter.MioDashboardPresenter;
 import com.creatrix.unicorn.Presenter.PendingCounterPresenter;
 import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.Services.Constants;
+import com.creatrix.unicorn.UtilityHelper.DateTimeUtil;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.databinding.ActivityDoctorDashboardBinding;
 
@@ -56,8 +57,7 @@ public class DoctorDashboardActivity extends AppCompatActivity implements IPendi
         HashMap<String, String> user = session.getUserDetails();
         empId = Integer.parseInt(user.get(SessionManagement.KEY_EmpId));
         Date c = Calendar.getInstance().getTime();
-        SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault());
-        String formattedDate = df.format(c);
+        String formattedDate = DateTimeUtil.getDisplayDate(c);
         String currentDate = formattedDate;
         presenter.totalDcr();
         presenter.totalPresc();

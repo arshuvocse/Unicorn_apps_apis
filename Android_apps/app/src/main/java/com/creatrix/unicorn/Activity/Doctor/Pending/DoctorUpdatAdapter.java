@@ -1,5 +1,6 @@
 package com.creatrix.unicorn.Activity.Doctor.Pending;
 
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;
 import android.content.Context;
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -73,7 +74,7 @@ public class DoctorUpdatAdapter extends RecyclerView.Adapter<DoctorUpdatAdapter.
 
 
             holder.createdat.setText(ps.getCreatedAt());
-            holder.docName.setText(ps.getDoctorCode());
+            holder.docName.setText(ReportFilterHelper.withCode(ps.getDoctorCode(), ps.getDoctorName()));
             holder.docmarket.setText(ps.getMarketName());
             holder.masterLayout.setOnClickListener(view -> {
                 Intent gotos = new Intent(context, DoctorPropertyChangeActivity.class);

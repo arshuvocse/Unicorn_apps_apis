@@ -106,9 +106,9 @@ namespace SalesSolutionWebAPI.Controllers
 
         [HttpGet]
         [Route("api/CusDemo/GetAttendanceData")]
-        public IHttpActionResult GetAttendanceData(int empId, string startDate, string endDate)
+        public IHttpActionResult GetAttendanceData(int empId, string startDate, string endDate, bool allTeam = false)
         {
-            DataTable dt = aCusDal.GetEmpAppAttendance(empId, startDate, endDate);
+            DataTable dt = aCusDal.GetEmpAppAttendance(empId, startDate, endDate, allTeam);
             string JSONresult;
             JSONresult = JsonConvert.SerializeObject(dt);
             dynamic json = JsonConvert.DeserializeObject(JSONresult);

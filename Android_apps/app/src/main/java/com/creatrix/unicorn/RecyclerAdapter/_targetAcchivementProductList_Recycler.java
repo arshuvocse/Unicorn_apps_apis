@@ -15,6 +15,7 @@ import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.UtilityHelper.MathUtil;
 
 import java.util.List;
+import java.util.Locale;
 
 public class _targetAcchivementProductList_Recycler extends RecyclerView.Adapter<_targetAcchivementProductList_Recycler.BookViewHolder> {
     private Context context;
@@ -32,12 +33,14 @@ public class _targetAcchivementProductList_Recycler extends RecyclerView.Adapter
         public TextView targetTxt;
         public TextView acchiveTxt;
         public TextView percenTxt;
+        public TextView balanceTxt;
         public BookViewHolder(View view) {
             super(view);
             productTxt = (TextView) view.findViewById(R.id.productTxt);
             targetTxt = (TextView) view.findViewById(R.id.targetTxt);
             acchiveTxt = (TextView) view.findViewById(R.id.acchiveTxt);
             percenTxt = (TextView) view.findViewById(R.id.percenTxt);
+            balanceTxt = (TextView) view.findViewById(R.id.balanceTxt);
         }
     }
 
@@ -51,27 +54,12 @@ public class _targetAcchivementProductList_Recycler extends RecyclerView.Adapter
 
     @Override
     public void onBindViewHolder(_targetAcchivementProductList_Recycler.BookViewHolder holder, int position) {
-        holder.productTxt.setText(aList.get(position).getProductName());
-        holder.targetTxt.setText(aList.get(position).getTargetQty());
-        holder.acchiveTxt.setText(aList.get(position).getAchivment());
-
-        Double aT  = Double.parseDouble(aList.get(position).getTargetQty());
-        Double aA  = Double.parseDouble(aList.get(position).getAchivment());
-
-        Double perQty =(aA * 100)/aT;
-        if(aA !=0){
-        if(perQty !=null || perQty !=Double.NaN){
-            Double AcPercent  = MathUtil.round(perQty,2);
-            String withPercentSign = AcPercent.toString() + "%";
-            holder.percenTxt.setText(withPercentSign);
-        }
-        }else{
-            holder.percenTxt.setText("0%");
-
-        }
-
-
-
+        Rp_TargetAcchivment item = aList.get(position);
+        holder.productTxt.setText(item.getSubTerritoryCode() + (item.getSubTerritoryName() == null ? "" : " : " + item.getSubTerritoryName()));
+        holder.targetTxt.setText(String.format(Locale.US, "%.2f", item.getTargetAmt()));
+        holder.acchiveTxt.setText(String.format(Locale.US, "%.2f", item.getSalesAmt()));
+        holder.percenTxt.setText(String.format(Locale.US, "%.2f%%", item.getAchvPercent()));
+        holder.balanceTxt.setText(String.format(Locale.US, "%.2f", item.getBalanceAmt()));
     }
 
     @Override

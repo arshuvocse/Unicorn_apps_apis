@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notification channels -->
+    <string name="tracking_channel_status_name">Location tracking</string>
+    <string name="tracking_channel_status_desc">Shown while this device is reporting its location to your organization.</string>
+    <string name="tracking_channel_alert_name">Tracking needs attention</string>
+    <string name="tracking_channel_alert_desc">Shown when a permission or setting stops location tracking from working.</string>
+
+    <!-- Persistent foreground notification -->
+    <string name="tracking_notif_title">Location tracking is on</string>
+    <string name="tracking_notif_text_ok">Sharing location with your organization</string>
+    <string name="tracking_notif_text_waiting">Waiting for a location fix…</string>
+    <string name="tracking_notif_text_offline">Offline – %1$d location(s) will upload when connected</string>
+    <string name="tracking_notif_text_pending">%1$d location(s) waiting to upload</string>
+    <string name="tracking_notif_action_stop">Stop</string>
+    <string name="tracking_notif_action_fix">Fix</string>
+
+    <!-- Alert notification -->
+    <string name="tracking_alert_title">Location tracking needs attention</string>
+    <string name="tracking_alert_resume_title">Location tracking stopped</string>
+    <string name="tracking_alert_resume_text">Android did not allow tracking to restart automatically. Tap to resume.</string>
+
+    <!-- Problems (see TrackingProblem) -->
+    <string name="tracking_problem_consent">Tracking consent has not been given.</string>
+    <string name="tracking_problem_location_permission">Location permission is required.</string>
+    <string name="tracking_problem_precise_location">Precise location is required. Choose \"Precise\" instead of \"Approximate\".</string>
+    <string name="tracking_problem_notifications">Notification permission is required to show that tracking is active.</string>
+    <string name="tracking_problem_background_location">Location access must be set to \"Allow all the time\" so tracking works when the app is closed.</string>
+    <string name="tracking_problem_location_services">Location services are turned off on this device.</string>
+    <string name="tracking_problem_battery">Battery optimization may delay tracking. Allow the app to run unrestricted.</string>
+
+    <!-- Setup dialogs -->
+    <string name="tracking_setup_consent_title">Location tracking</string>
+    <string name="tracking_setup_consent_message">This is a company-managed device. While tracking is on, the app records this device\'s location (latitude, longitude, accuracy, time, source and street address) about every %1$d minute(s), including when the app is closed or the screen is locked, and sends it to your organization\'s server.\n\nA notification is always shown while tracking is active. Location is only collected while tracking is on.
+
+Tracking is on: please keep Location switched on. Indoors, or anywhere GPS cannot reach, the app works out the position from nearby mobile towers and WiFi networks, and that only works while Location stays on.</string>
+    <string name="tracking_setup_accept">I understand</string>
+    <string name="tracking_setup_decline">Not now</string>
+    <string name="tracking_setup_location_title">Allow location access</string>
+    <string name="tracking_setup_location_message">Location access is needed to record where this device is. Choose \"Precise\" when asked.</string>
+    <string name="tracking_setup_background_title">Allow location all the time</string>
+    <string name="tracking_setup_background_message">On the next screen choose \"Allow all the time\" so tracking continues when the app is closed or the screen is off.</string>
+    <string name="tracking_setup_settings_title">Open settings</string>
+    <string name="tracking_setup_settings_message">This permission can only be changed in the app settings. Open settings, then allow it.</string>
+    <string name="tracking_setup_battery_title">Keep tracking running</string>
+    <string name="tracking_setup_battery_message">To keep tracking reliable while the device is idle, allow the app to run without battery restrictions.</string>
+    <string name="tracking_setup_continue">Continue</string>
+    <string name="tracking_setup_open_settings">Open settings</string>
+    <string name="tracking_setup_skip">Skip</string>
+    <string name="tracking_setup_failed">Tracking could not be started. Resolve the remaining items and try again.</string>
+
+    <!-- Managed configuration (EMM) -->
+    <string name="tracking_restriction_base_url">Upload server URL</string>
+    <string name="tracking_restriction_base_url_desc">HTTPS base URL of the tracking backend.</string>
+    <string name="tracking_restriction_interval">Location interval (seconds)</string>
+    <string name="tracking_restriction_interval_desc">How often a location is requested.</string>
+    <string name="tracking_restriction_user_can_stop">Employee can stop tracking</string>
+    <string name="tracking_restriction_enforce">Enforce device-owner policy</string>
+    <string name="tracking_restriction_enforce_desc">When this app is the device owner, keep location on and stop users from clearing app data or force-stopping the app.</string>
+</resources>

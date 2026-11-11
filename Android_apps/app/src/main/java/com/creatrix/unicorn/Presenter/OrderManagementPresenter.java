@@ -93,7 +93,7 @@ public class OrderManagementPresenter implements IOrderManagement.Presenter {
             progressDoalog.dismiss();
             String str = ex.toString();
             Log.e("Exception", str);
-            view.onOrderError(ex.toString());
+            view.onOrderError("The order could not be placed. Please try again.");
         }
 
     }
@@ -238,7 +238,7 @@ public class OrderManagementPresenter implements IOrderManagement.Presenter {
             progressDoalog.dismiss();
             String str = ex.toString();
             Log.e("Exception", str);
-            view.onOrderError(ex.toString());
+            view.onOrderError("The order could not be placed. Please try again.");
         }
     }
 
@@ -325,7 +325,7 @@ public class OrderManagementPresenter implements IOrderManagement.Presenter {
                         }else {
                             progressDoalog.dismiss();
                            // view.onOrderError("Something went wrong... Please try again");
-                            view.onOrderError(info != null ? info.getErrormessagenew() : "Order API returned HTTP " + response.code());
+                            view.onOrderError(buildOrderErrorMessage(info, response.code()));
                         }
                     } catch (Exception exception) {
                         Log.e(ORDER_SUBMIT_LOG_TAG, "RESPONSE PARSE ERROR", exception);
@@ -340,9 +340,11 @@ public class OrderManagementPresenter implements IOrderManagement.Presenter {
                     Log.e(ORDER_SUBMIT_LOG_TAG, "API FAILURE: " + t.getMessage(), t);
                     progressDoalog.dismiss();
                     if (t instanceof SocketTimeoutException) {
-                        view.onOrderError("Slow Connection Detected. Please try again");
+                        view.onOrderError("Slow connection detected. The order may not have been placed. Please check your orders list before trying again.");
+                    } else if (t instanceof java.io.IOException) {
+                        view.onOrderError("Could not reach the server. Please check your internet connection and try again.");
                     } else {
-                        view.onOrderError("Something went wrong... Please try again");
+                        view.onOrderError("The order could not be placed. Please try again.");
                     }
                 }
             });
@@ -351,9 +353,23 @@ public class OrderManagementPresenter implements IOrderManagement.Presenter {
             progressDoalog.dismiss();
             String str = ex.toString();
             Log.e(ORDER_SUBMIT_LOG_TAG, "REQUEST ERROR: " + str, ex);
-            view.onOrderError(ex.toString());
+            view.onOrderError("The order could not be placed. Please try again.");
         }
 
+    }
+
+    // Never show a blank/technical message: prefer the server's reason, else explain by HTTP status.
+    private String buildOrderErrorMessage(ResultInfo info, int httpCode) {
+        if (info != null && info.getErrormessagenew() != null && !info.getErrormessagenew().trim().isEmpty()) {
+            return info.getErrormessagenew().trim();
+        }
+        if (httpCode >= 500) {
+            return "The server had a problem while placing the order (code " + httpCode + "). Please try again in a moment.";
+        }
+        if (httpCode >= 400) {
+            return "The order could not be accepted by the server (code " + httpCode + "). Please review the order and try again.";
+        }
+        return "The order could not be placed. Please review the products/campaign and try again.";
     }
 
     private void logLongMessage(String tag, String message) {

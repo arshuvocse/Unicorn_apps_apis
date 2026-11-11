@@ -54,6 +54,7 @@ import com.creatrix.unicorn.Presenter.DoctorPresenter;
 import com.creatrix.unicorn.Presenter.MarketStructurePresenter;
 import com.creatrix.unicorn.Presenter.PendingDoctorPresenter;
 import com.creatrix.unicorn.R;
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
 import com.creatrix.unicorn.databinding.ActivityDoctorPendingBinding;
@@ -94,6 +95,7 @@ public class DoctorPendingActivity extends AppCompatActivity implements IPending
     List<ModelProviderType> providertypeList;
     List<ModelSMCType> pharmatypeList;
     String selecteddoctortypeId="0", selectedprogramId="0",selectedpharmatypeId="0";
+    int selectedDoctorId; // 0 = All
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -160,17 +162,12 @@ public class DoctorPendingActivity extends AppCompatActivity implements IPending
         ftm.filterStatusLayout.tvStatusTag.setText("Doctor Status");
 
         ftm.filterMonthYearLayout.getRoot().setVisibility(GONE);
-        switch (role) {
-            case "MIO":
-                ftm.linearLayoutemp.setVisibility(GONE);
-                break;
-            case "AM":
-            case "DZSM":
-            case "NSM":
-            case "Admin":
-                ftm.linearLayoutemp.setVisibility(VISIBLE);
-                break;
-        }
+        // old Employee-Type/MIO/AM/DZSM pickers replaced by one searchable Sales Person list + a Doctor list
+        ftm.linearLayoutemp.setVisibility(GONE);
+        ftm.salesPersonLay.setVisibility(VISIBLE);
+        ftm.doctorLay.setVisibility(VISIBLE);
+        ReportFilterHelper.loadSalesPersons(DoctorPendingActivity.this, ftm.spinnerSalesPerson);
+        ReportFilterHelper.loadDoctors(DoctorPendingActivity.this, ftm.spinnerDoctor);
 
         List<String> emptype = new ArrayList<>();
         switch (role) {
@@ -412,30 +409,10 @@ public class DoctorPendingActivity extends AppCompatActivity implements IPending
             docstatus=(String)ftm.filterStatusLayout.spinnerCustomerStatus.getSelectedItem();
             try {
                 int previousEmpId = empId;
-                switch (selectedTyp) {
-                    case "MIO":
-                        MIO mioempid = (MIO) ftm.spinnerApprovalMio.getSelectedItem();
-                        if (mioempid != null) {
-                            empId = mioempid.getMIOEmpId();
-                        }
-                        break;
-                    case "AM":
-                        ASM amempid = (ASM) ftm.spinnerApprovalAsm.getSelectedItem();
-                        if (amempid != null) {
-                            empId = amempid.getASMEmpId();
-                        }
-                        break;
-                    case "DZSM":
-                        RSM dzsmempid = (RSM) ftm.spinnerApprovalRsm.getSelectedItem();
-                        if (dzsmempid != null) {
-                            empId = dzsmempid.getRSMEmpId();
-                        }
-                        break;
-                    default:
-                        HashMap<String, String> user = session.getUserDetails();
-                        empId = Integer.parseInt(user.get(SessionManagement.KEY_EmpId));
-                        break;
-                }
+                selectedDoctorId = ReportFilterHelper.selectedDoctorId(ftm.spinnerDoctor);
+                // a picked person reloads that person's doctors (the SP scopes by his role); All = own hierarchy
+                int picked = ReportFilterHelper.selectedEmpIdOrZero(ftm.spinnerSalesPerson);
+                empId = picked != 0 ? picked : Integer.parseInt(session.getUserDetails().get(SessionManagement.KEY_EmpId));
 
                 if (empId != previousEmpId) {
                     progressDoalog = new ProgressDialog(DoctorPendingActivity.this);
@@ -543,6 +520,11 @@ public class DoctorPendingActivity extends AppCompatActivity implements IPending
 
 
     public void LoadinView(List<DoctorARModel> aList) {
+        if (aList != null && selectedDoctorId > 0) {
+            List<DoctorARModel> one = new ArrayList<>();
+            for (DoctorARModel d : aList) if (d.getDoctorId() == selectedDoctorId) one.add(d);
+            aList = one;
+        }
         if (aList != null) {
             progressDoalog.dismiss();
             binding.count.setText(String.valueOf(aList.size()));
@@ -574,7 +556,10 @@ public class DoctorPendingActivity extends AppCompatActivity implements IPending
 
     @Override
     public void OnErrorReport(String msg) {
-
+        if (progressDoalog != null && progressDoalog.isShowing()) {
+            progressDoalog.dismiss();
+        }
+        SnackBarManagement._error_CustomMessage(binding.masterLayout, msg);
     }
     public void vGroup(List<Group> groupList) {
         try {

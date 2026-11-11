@@ -297,6 +297,7 @@ public class DBCrudHelper {
                     aInfo.setVisitTypeName(cursor.getString(cursor.getColumnIndex("VisitTypeName")));
                     aInfo.setChamberId(cursor.getInt(cursor.getColumnIndex("ChemberId")));
                     aInfo.setRemarks(cursor.getString(cursor.getColumnIndex("Remarks")));
+                    aInfo.setType(cursor.getString(cursor.getColumnIndex("CCType")));
                     dcrList.add(aInfo);
 
                     int dcrId = cursor.getInt(cursor.getColumnIndex("DcrId"));
@@ -492,27 +493,28 @@ public class DBCrudHelper {
                 String TerritoryName = "";
                 String SubTerritoryName = "";
 
-                if (!aInfo.getCustomerName().isEmpty()) {
+                // API returns null MarketName/OwnerName etc.; .isEmpty() on null aborted the whole insert
+                if (!TextUtils.isEmpty(aInfo.getCustomerName())) {
                     CustomerName = aInfo.getCustomerName().replace("'", "''");
                 } else {
                     CustomerName = "";
                 }
-                if (!aInfo.getMarketName().isEmpty()) {
+                if (!TextUtils.isEmpty(aInfo.getMarketName())) {
                     MarketName = aInfo.getMarketName().replace("'", "''");
                 } else {
                     MarketName = "";
                 }
-                if (!aInfo.getOwnerName().isEmpty()) {
+                if (!TextUtils.isEmpty(aInfo.getOwnerName())) {
                     OwnerName = aInfo.getOwnerName().replace("'", "''");
                 } else {
                     OwnerName = "";
                 }
-                if (!aInfo.getAddress().isEmpty()) {
+                if (!TextUtils.isEmpty(aInfo.getAddress())) {
                     Address = aInfo.getAddress().replace("'", "''");
                 } else {
                     Address = "";
                 }
-                if (!aInfo.getCustomerStatus().isEmpty()) {
+                if (!TextUtils.isEmpty(aInfo.getCustomerStatus())) {
                     Customerstatus = aInfo.getCustomerStatus().replace("'", "''");
                 } else {
                     Customerstatus = "";
@@ -1239,6 +1241,27 @@ public class DBCrudHelper {
             return true;
         } else {
             return false;
+        }
+    }
+
+    // Returns -1 on any failure so callers can tell "table empty" (0) apart from
+    // "count could not be read" and skip acting on it, instead of risking a false sync trigger.
+    public int GetRowCount(String tableName) {
+        Cursor cursor = null;
+        try {
+            SQLiteDatabase database = dbHelperMain.getReadableDatabase();
+            cursor = database.rawQuery("SELECT COUNT(*) FROM '" + tableName + "'", null);
+            if (cursor != null && cursor.moveToFirst()) {
+                return cursor.getInt(0);
+            }
+            return -1;
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            return -1;
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
         }
     }
 

@@ -313,6 +313,121 @@ namespace SalesSolutionWebAPI.Repository
                 accessManager.SqlConnectionClose();
             }
         }
+
+        // empId = 0 -> every employee with a DCR area lock setup row
+        public DataTable GetDcrAreaLock(int empId)
+        {
+            try
+            {
+                accessManager.SqlConnectionOpen(DataBase.SalesDisDB);
+                List<SqlParameter> aSqlParameterlist = new List<SqlParameter>();
+                aSqlParameterlist.Add(new SqlParameter("@EmpInfoId", empId));
+                return accessManager.GetDataTable("sp_Webapi_Get_DcrAreaLock", aSqlParameterlist);
+            }
+            finally
+            {
+                accessManager.SqlConnectionClose();
+            }
+        }
+
+        public ResultInfo SaveDcrAreaLock(DcrAreaLockDTO req)
+        {
+            ResultInfo result = new ResultInfo();
+            if (req == null || req.EmpInfoId <= 0)
+            {
+                result.ErrorMessage = "EmpInfoId is required.";
+                return result;
+            }
+            try
+            {
+                accessManager.SqlConnectionOpen(DataBase.SalesDisDB);
+                List<SqlParameter> gSqlParameterList = new List<SqlParameter>();
+                gSqlParameterList.Add(new SqlParameter("@EmpInfoId", req.EmpInfoId));
+                gSqlParameterList.Add(new SqlParameter("@IsLockOff", req.IsLockOff));
+                gSqlParameterList.Add(new SqlParameter("@Remarks", (object)req.Remarks ?? DBNull.Value));
+                gSqlParameterList.Add(new SqlParameter("@EntryBy", (object)req.EntryBy ?? DBNull.Value));
+                DataTable dt = accessManager.GetDataTable("sp_Webapi_Save_DcrAreaLock", gSqlParameterList);
+                result.isSuccess = dt.Rows.Count > 0 && Convert.ToInt32(dt.Rows[0]["IsSuccess"]) == 1;
+                result.Msd = dt.Rows.Count > 0 ? dt.Rows[0]["Message"].ToString() : "";
+            }
+            catch (Exception ex)
+            {
+                accessManager.SqlConnectionClose(true);
+                result.isSuccess = false;
+                result.ErrorMessage = ex.Message;
+            }
+            finally
+            {
+                accessManager.SqlConnectionClose();
+            }
+            return result;
+        }
+        // IsLock = false lifts the chamber's DCR area lock (geofence), true puts it back
+        public ResultInfo SaveChamberLock(ChamberLockDTO req)
+        {
+            ResultInfo result = new ResultInfo();
+            if (req == null || req.ChamberId <= 0)
+            {
+                result.ErrorMessage = "ChamberId is required.";
+                return result;
+            }
+            try
+            {
+                accessManager.SqlConnectionOpen(DataBase.SalesDisDB);
+                List<SqlParameter> gSqlParameterList = new List<SqlParameter>();
+                gSqlParameterList.Add(new SqlParameter("@ChamberId", req.ChamberId));
+                gSqlParameterList.Add(new SqlParameter("@IsLock", req.IsLock));
+                DataTable dt = accessManager.GetDataTable("sp_Webapi_Save_ChamberLock", gSqlParameterList);
+                result.isSuccess = dt.Rows.Count > 0 && Convert.ToInt32(dt.Rows[0]["IsSuccess"]) == 1;
+                result.Msd = dt.Rows.Count > 0 ? dt.Rows[0]["Message"].ToString() : "";
+            }
+            catch (Exception ex)
+            {
+                accessManager.SqlConnectionClose(true);
+                result.isSuccess = false;
+                result.ErrorMessage = ex.Message;
+            }
+            finally
+            {
+                accessManager.SqlConnectionClose();
+            }
+            return result;
+        }
+
+        // Fills the chamber's Lat/Lon only when it has none yet (the SP enforces that rule)
+        public ResultInfo SaveChamberLocation(ChamberLocationDTO req)
+        {
+            ResultInfo result = new ResultInfo();
+            if (req == null || req.ChamberId <= 0)
+            {
+                result.ErrorMessage = "ChamberId is required.";
+                return result;
+            }
+            try
+            {
+                accessManager.SqlConnectionOpen(DataBase.SalesDisDB);
+                List<SqlParameter> gSqlParameterList = new List<SqlParameter>();
+                gSqlParameterList.Add(new SqlParameter("@chamberId", req.ChamberId));
+                gSqlParameterList.Add(new SqlParameter("@Latitude", (object)req.Latitude ?? DBNull.Value));
+                gSqlParameterList.Add(new SqlParameter("@Longitude", (object)req.Longitude ?? DBNull.Value));
+                DataTable dt = accessManager.GetDataTable("sp_Webapi_Set_ChamberLocationIfEmpty", gSqlParameterList);
+                bool updated = dt.Rows.Count > 0 && Convert.ToBoolean(dt.Rows[0]["Updated"]);
+                result.isSuccess = updated;
+                result.Msd = updated ? "Chamber location saved." : "Chamber already has a location.";
+            }
+            catch (Exception ex)
+            {
+                accessManager.SqlConnectionClose(true);
+                result.isSuccess = false;
+                result.ErrorMessage = ex.Message;
+            }
+            finally
+            {
+                accessManager.SqlConnectionClose();
+            }
+            return result;
+        }
+
         public DataTable GetDoctorContactType()
         {
             try
@@ -347,6 +462,18 @@ namespace SalesSolutionWebAPI.Repository
             if (string.IsNullOrWhiteSpace(aDoctor.DoctorName))
             {
                 aInformation.ErrorMessage = "DoctorName is required.";
+                return aInformation;
+            }
+
+            if (string.IsNullOrWhiteSpace(aDoctor.DoctorAddress))
+            {
+                aInformation.ErrorMessage = "Doctor Address is required.";
+                return aInformation;
+            }
+
+            if (string.IsNullOrWhiteSpace(aDoctor.InstitutionSTr) || aDoctor.InstitutionSTr.Trim() == "----")
+            {
+                aInformation.ErrorMessage = "Doctor Institution is required.";
                 return aInformation;
             }
 
@@ -752,7 +879,11 @@ namespace SalesSolutionWebAPI.Repository
 
                         aSqlParameterList.Add(new SqlParameter("@pk", pk));
                         aSqlParameterList.Add(new SqlParameter("@ChamberTypeId", item.ChamberTypeId));
-                        aSqlParameterList.Add(new SqlParameter("@Name", item.Name));
+                        aSqlParameterList.Add(new SqlParameter("@Name", item.Name ?? (object)DBNull.Value));
+                        aSqlParameterList.Add(new SqlParameter("@Shift", item.Shift ?? (object)DBNull.Value));
+                        aSqlParameterList.Add(new SqlParameter("@SittingTime", item.SittingTime ?? (object)DBNull.Value));
+                        aSqlParameterList.Add(new SqlParameter("@InstitutionId", item.InstitutionId ?? (object)DBNull.Value));
+                        aSqlParameterList.Add(new SqlParameter("@Address", item.Address ?? (object)DBNull.Value));
                         aInformation.isSuccess = accessManager.SaveData("sp_Webapi_Save_DoctorChemberDetail", aSqlParameterList);
 
                     }
@@ -1120,6 +1251,29 @@ namespace SalesSolutionWebAPI.Repository
                 accessManager.SqlConnectionClose();
             }
 
+        }
+
+        // Lightweight count used by the app to decide whether a full GetDoctorList sync is needed,
+        // so a mobile client isn't forced to download and re-parse the whole list just to check for changes.
+        public int GetDoctorCountByUser(int empId)
+        {
+            try
+            {
+                accessManager.SqlConnectionOpen(DataBase.SalesDisDB);
+                List<SqlParameter> gSqlParameterList = new List<SqlParameter>();
+                gSqlParameterList.Add(new SqlParameter("@empid", empId));
+
+                DataTable dt = accessManager.GetDataTable("sp_Webapi_Get_DoctorList", gSqlParameterList);
+                return dt.Rows.Count;
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+            finally
+            {
+                accessManager.SqlConnectionClose();
+            }
         }
 
         //public DataTable GetDoctorList(int empId)
@@ -1552,6 +1706,22 @@ namespace SalesSolutionWebAPI.Repository
                             if (dtDoctorChem.Rows[ch]["ChamberName"] != DBNull.Value)
                             {
                                 aChemberDetails.ChamberName = dtDoctorChem.Rows[ch]["ChamberName"].ToString();
+                            }
+                            if (dtDoctorChem.Columns.Contains("Shift") && dtDoctorChem.Rows[ch]["Shift"] != DBNull.Value)
+                            {
+                                aChemberDetails.Shift = dtDoctorChem.Rows[ch]["Shift"].ToString();
+                            }
+                            if (dtDoctorChem.Columns.Contains("SittingTime") && dtDoctorChem.Rows[ch]["SittingTime"] != DBNull.Value)
+                            {
+                                aChemberDetails.SittingTime = dtDoctorChem.Rows[ch]["SittingTime"].ToString();
+                            }
+                            if (dtDoctorChem.Columns.Contains("InstitutionId") && dtDoctorChem.Rows[ch]["InstitutionId"] != DBNull.Value)
+                            {
+                                aChemberDetails.InstitutionId = Convert.ToInt32(dtDoctorChem.Rows[ch]["InstitutionId"].ToString());
+                            }
+                            if (dtDoctorChem.Columns.Contains("Address") && dtDoctorChem.Rows[ch]["Address"] != DBNull.Value)
+                            {
+                                aChemberDetails.Address = dtDoctorChem.Rows[ch]["Address"].ToString();
                             }
                             aDetailsList.Add(aChemberDetails);
                         }
@@ -2857,6 +3027,24 @@ namespace SalesSolutionWebAPI.Repository
                 DataTable dtProduct = new DataTable();
                 bool insuf = false;
 
+                // DCR area lock + tour plan gate: return the reason to the app (the save SP also enforces it).
+                List<SqlParameter> gateParams = new List<SqlParameter>();
+                gateParams.Add(new SqlParameter("@doctorId", aInfo.DoctorId));
+                gateParams.Add(new SqlParameter("@chamberId", (object)aInfo.ChamberId ?? DBNull.Value));
+                gateParams.Add(new SqlParameter("@sessionUser", (object)aInfo.SessionUser ?? DBNull.Value));
+                gateParams.Add(new SqlParameter("@dcrDate", (object)aInfo.DcrDate ?? DBNull.Value));
+                gateParams.Add(new SqlParameter("@Type", (object)aInfo.Type ?? DBNull.Value));
+                gateParams.Add(new SqlParameter("@Latitude", (object)aInfo.Latitude ?? DBNull.Value));
+                gateParams.Add(new SqlParameter("@Longitude", (object)aInfo.Longitude ?? DBNull.Value));
+                DataTable dtGate = accessManager.GetDataTable("sp_Webapi_Check_DcrGate", gateParams);
+                string gateMsg = dtGate.Rows.Count > 0 ? dtGate.Rows[0]["Msg"].ToString() : "";
+                if (gateMsg != "")
+                {
+                    aInformation.isValiCheck = true;
+                    aInformation.Msd = gateMsg;
+                    return aInformation;
+                }
+
 
                 if (aInfo.giftList != null)
                 {
@@ -2933,6 +3121,17 @@ namespace SalesSolutionWebAPI.Repository
                     if (pk > 0)
                     {
                         aInformation.isSuccess = true;
+                        // first DCR at a chamber stores its GPS position; an existing chamber location is never overwritten.
+                        // CVR excluded: there ChamberId is the customer id (the app sends Type "ccrAdapter").
+                        if (!string.Equals(aInfo.Type, "ccrAdapter", StringComparison.OrdinalIgnoreCase)
+                            && aInfo.ChamberId.GetValueOrDefault() > 0)
+                        {
+                            List<SqlParameter> locParams = new List<SqlParameter>();
+                            locParams.Add(new SqlParameter("@chamberId", aInfo.ChamberId.Value));
+                            locParams.Add(new SqlParameter("@Latitude", (object)aInfo.Latitude ?? DBNull.Value));
+                            locParams.Add(new SqlParameter("@Longitude", (object)aInfo.Longitude ?? DBNull.Value));
+                            accessManager.GetDataTable("sp_Webapi_Set_ChamberLocationIfEmpty", locParams);
+                        }
                         //if (aInfo.productList != null)
                         //{
                         //    foreach (mProduct item in aInfo.productList)
@@ -3036,7 +3235,7 @@ namespace SalesSolutionWebAPI.Repository
         }
 
 
-        public DataTable GetDcrList(string empId, string FromDt, string ToDt, string providertype, string pharmatype, string doctortype)
+        public DataTable GetDcrList(string empId, string FromDt, string ToDt, string providertype, string pharmatype, string doctortype, int doctorId = 0, bool allTeam = false)
         {
             try
             {
@@ -3048,7 +3247,8 @@ namespace SalesSolutionWebAPI.Repository
                 aSqlParameterlist.Add(new SqlParameter("@providertype", providertype ?? (object)DBNull.Value ?? (object)DBNull.Value));
                 aSqlParameterlist.Add(new SqlParameter("@pharmatype", pharmatype ?? (object)DBNull.Value ?? (object)DBNull.Value));
                 aSqlParameterlist.Add(new SqlParameter("@doctortype", doctortype ?? (object)DBNull.Value ?? (object)DBNull.Value));
-
+                aSqlParameterlist.Add(new SqlParameter("@doctorId", doctorId));
+                aSqlParameterlist.Add(new SqlParameter("@allTeam", allTeam));
 
                 DataTable dt = accessManager.GetDataTable("sp_Webapi_Get_DcrListById", aSqlParameterlist);
                 return dt;

@@ -32,6 +32,7 @@ import com.creatrix.unicorn.Model.LeaveTypeInfo;
 import com.creatrix.unicorn.Model.LeaveVM;
 import com.creatrix.unicorn.Presenter.LeavePresenter;
 import com.creatrix.unicorn.R;
+import com.creatrix.unicorn.UtilityHelper.DateTimeUtil;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
 import com.creatrix.unicorn.UtilityHelper.UtilityHelper;
@@ -47,6 +48,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 public class LeaveActivity extends AppCompatActivity implements ILeave.View {
     ActivityLeaveBinding viewBinding;
@@ -92,9 +94,8 @@ public class LeaveActivity extends AppCompatActivity implements ILeave.View {
                     sdate = viewBinding.startDate.getText().toString().trim();
                     edate = viewBinding.endDate.getText().toString().trim();
                     try {
-                        SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy");
-                        Date d1 = sdf.parse(sdate);
-                        Date d2 = sdf.parse(edate);
+                        Date d1 = DateTimeUtil.parseDisplayDate(sdate);
+                        Date d2 = DateTimeUtil.parseDisplayDate(edate);
                         long oneday = 24 * 60 * 60 * 1000;
                         long diff = d2.getTime() - d1.getTime();
                         diffDays = (diff + oneday) / (24 * 60 * 60 * 1000);
@@ -150,7 +151,7 @@ public class LeaveActivity extends AppCompatActivity implements ILeave.View {
                                 viewBinding.btnSubmit.setEnabled(true);
                             }
                         }
-                    } catch (ParseException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
 

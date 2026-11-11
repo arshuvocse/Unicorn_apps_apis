@@ -40,7 +40,7 @@
     <string name="total">Total</string>
     <string name="market">Market <font color='#FF0000'>*</font></string>
     <string name="chemist_namea">Customer Name </string>
-    <string name="customer_address">Address (Union/Ward/Bazar)</string>
+    <string name="customer_address">Address (Union/Ward/Bazar) <font color='#FF0000'>*</font></string>
     <string name="shop_image">Pharmacy Signboard Image/Cash Memo/Visiting Card </string>
     <string name="trade_image">Trade License</string>
     <string name="contact">Contact <font color='#FF0000'>*</font></string>
@@ -110,7 +110,7 @@
     <string name="log_out">Log out</string>
     <string name="sync_item">Sync Item</string>
     <string name="mileage_claim">Mileage Claim</string>
-    <string name="address">Address</string>
+    <string name="address">Address <font color='#FF0000'>*</font></string>
     <string name="approve">Approve</string>
     <string name="view">View</string>
     <string name="forward">Forward</string>
@@ -126,7 +126,7 @@
     <string name="attendance">Attendance</string>
     <string name="update_customer_info">Update Customer Info</string>
     <string name="update_doctor_info">Update Doctor Info</string>
-    <string name="target_vs_achievement">Target vs Achievement</string>
+    <string name="target_vs_achievement">Target &amp; Achievement</string>
     <string name="add_dwsp">ADD DWSP</string>
     <string name="add_dwsptarget">ADD DWSP Target</string>
     <string name="sample_stock_information">Sample Stock Information</string>
@@ -201,7 +201,7 @@
     <string name="tag_year">Year</string>
     <string name="tag_dwsp">ADD DWSP</string>
     <string name="tag_dcr_list">DCR List</string>
-    <string name="tag_institute">Gender</string>
+    <string name="tag_institute">Gender <font color='#FF0000'>*</font></string>
     <string name="tag_special_day">Special Day</string>
     <string name="tag_update">Update</string>
     <string name="dash">--------</string>
@@ -221,7 +221,7 @@
     <string name="tag_prescription">Prescription</string>
     <string name="tag_add_doctor_s_requirement">ADD Doctor\'s Requirement</string>
     <string name="select_doctor">Select Doctor</string>
-    <string name="tag_search_doctor">Search Doctor</string>
+    <string name="tag_search_doctor">Search Doctor / Chamber</string>
     <string name="tag_total_count">Total Count : </string>
     <string name="tag_group">Group</string>
     <string name="tag_target">Target</string>
@@ -268,4 +268,5 @@
         <item>RSM</item>
     </string-array>
     <string name="customer_type_label">Customer Type <font color='#FF0000'>*</font></string>
+    <string name="sales_order_payment_report">Sales Order &amp; Payment Report</string>
 </resources>

@@ -55,6 +55,7 @@ public class DoctorARModel {
     int SMCTypeId;
 
     int DoctorId;
+    String DoctorName;
     String GroupName;
     String RegionName;
     String AreaName;
@@ -134,6 +135,10 @@ public class DoctorARModel {
     public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
     }
+    public String getDoctorName() { return DoctorName; }
+
+    public void setDoctorName(String doctorName) { DoctorName = doctorName; }
+
 
     public String getDoctorCode() {
         return doctorCode;

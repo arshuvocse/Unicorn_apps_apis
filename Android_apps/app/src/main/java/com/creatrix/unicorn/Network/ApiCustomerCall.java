@@ -33,6 +33,8 @@ public interface ApiCustomerCall {
     @Headers({"Accept: application/json"})
     @GET("/api/Customer")
     Call<List<Customer>> GetCustomerByUser(@Query("empId") int empId);
+    @GET("/api/Customer/GetCustomerCountByUser")
+    Call<Integer> GetCustomerCountByUser(@Query("empId") int empId);
     @GET("/api/Customer/GetCustomerByUserByMobileNo")
     Call<Customer> GetCustomerByUserByMobileNo(@Query("empId") int empId, @Query("CellNo") String CellNo);
 

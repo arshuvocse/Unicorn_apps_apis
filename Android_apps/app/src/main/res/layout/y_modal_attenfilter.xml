@@ -7,6 +7,37 @@
     android:padding="10dp">
 
     <LinearLayout
+        android:id="@+id/empDiv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="10dp"
+        android:background="@color/white"
+        android:elevation="5dp"
+        android:orientation="horizontal"
+        android:padding="10dp"
+        android:weightSum="4">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:fontFamily="@font/latoregular"
+            android:text="Sales Person :"
+            android:textColor="@color/main"
+            android:textSize="13sp" />
+
+        <com.toptoche.searchablespinnerlibrary.SearchableSpinner
+            android:id="@+id/spnEmp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="3" />
+
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/ddDiv"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

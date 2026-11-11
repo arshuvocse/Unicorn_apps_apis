@@ -54,6 +54,7 @@ import com.creatrix.unicorn.Presenter.MarketStructurePresenter;
 import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.Services.Constants;
 import com.creatrix.unicorn.UtilityHelper.NetworkInformation;
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
 import com.creatrix.unicorn.UtilityHelper.UtilityHelper;
@@ -175,19 +176,15 @@ public class CustomerWiseSalesReport extends Fragment implements IMarketStractur
         bsheetdlg = new BottomSheetDialog(getActivity());
         bsheetdlg.setContentView(ftm.getRoot());
         bsheetdlg.setCanceledOnTouchOutside(true);
-        switch (role) {
-            case "MIO":
-                ftm.linearLayoutemp.setVisibility(GONE);
-                break;
-            case "AM":
-            case "DZSM":
-            case "NSM":
-                ftm.linearLayoutemp.setVisibility(VISIBLE);
-                break;
-        }
+        // old Employee-Type/MIO/AM/DZSM spinners replaced by one searchable Sales Person list + a Customer list
+        ftm.linearLayoutemp.setVisibility(GONE);
+        ftm.salesPersonLay.setVisibility(VISIBLE);
+        ftm.customerLay.setVisibility(VISIBLE);
+        ReportFilterHelper.loadSalesPersons(requireActivity(), ftm.spinnerSalesPerson);
+        ReportFilterHelper.loadCustomers(requireActivity(), ftm.spinnerCustomer);
         ftm.filterStatusLayout.getRoot().setVisibility(GONE);
         ftm.filterTypeLayout.tilDoctype.setVisibility(View.GONE);
-        ftm.filterTypeLayout.tilProgtypetype.setVisibility(VISIBLE);
+        ftm.filterTypeLayout.tilProgtypetype.setVisibility(GONE);
         ftm.filterTypeLayout.tilCusttype.setVisibility(VISIBLE);
         ftm.filterTypeLayout.tilPharmatype.setVisibility(View.GONE);
         ftm.filterMonthYearLayout.getRoot().setVisibility(GONE);
@@ -364,26 +361,13 @@ public class CustomerWiseSalesReport extends Fragment implements IMarketStractur
         ftm.montyer.setText(UtilityHelper.monthNameArrayFull[month] + ',' + year);
         ftm.filterTopLayout.btnDonefilter.setOnClickListener(v -> {
             try {
-                switch (selectedTyp)
-                {
-                    case "MIO":
-                        MIO mioempid;
-                        mioempid= (MIO) ftm.spinnerApprovalMio.getSelectedItem();
-                        empId=String.valueOf(mioempid.getMIOEmpId());
-                        break;
-                    case "AM":
-                        ASM amempid=(ASM) ftm.spinnerApprovalAsm.getSelectedItem();
-                        empId=String.valueOf(amempid.getASMEmpId());
-                        break;
-                    case "DZSM":
-                        RSM dzsmempid=(RSM) ftm.spinnerApprovalRsm.getSelectedItem();
-                        empId=String.valueOf(dzsmempid.getRSMEmpId());
-                        break;
-                }
+                String loginEmpId = session.getUserDetails().get(SessionManagement.KEY_EmpId);
+                empId = ReportFilterHelper.selectedEmpId(ftm.spinnerSalesPerson, loginEmpId);
 
                 HashMap<String, String> filters = new HashMap<>();
                 filters.put("Role", role);
                 filters.put("empId", empId);
+                filters.put("CustomerId", ReportFilterHelper.selectedCustomerId(ftm.spinnerCustomer));
                 filters.put("Month", String.valueOf(selectedMonth+1));
                 filters.put("Year", String.valueOf(selectedyear));
                 filters.put("ProviderType", selectedProviderTypeId);
@@ -447,12 +431,15 @@ public class CustomerWiseSalesReport extends Fragment implements IMarketStractur
                 call.enqueue(new Callback<CWSaleReportModel>() {
                     @Override
                     public void onResponse(@NonNull Call<CWSaleReportModel> call, @NonNull Response<CWSaleReportModel> response) {
-                        if(progressDoalog!=null || progressDoalog.isShowing())
+                        if(progressDoalog!=null && progressDoalog.isShowing() && isAdded()) // isAdded: the response can arrive after the screen is closed
                         {
                             progressDoalog.dismiss();
                         }
                         CWSaleReportModel rp = response.body();
-                        assert rp != null;
+                        if (rp == null || rp.getCwsDataList() == null) {
+                            SnackBarManagement._warning_CustomMessage(binding.getRoot(), "Report loading failed. Please try again");
+                            return;
+                        }
                         if(rp.getCwsDataList().size()>0)
                             {
                                 LoadRV(rp);
@@ -464,7 +451,7 @@ public class CustomerWiseSalesReport extends Fragment implements IMarketStractur
 
                     @Override
                     public void onFailure(@NonNull Call<CWSaleReportModel> call, @NonNull Throwable t) {
-                        if(progressDoalog!=null || progressDoalog.isShowing())
+                        if(progressDoalog!=null && progressDoalog.isShowing() && isAdded()) // isAdded: the response can arrive after the screen is closed
                         {
                             progressDoalog.dismiss();
                         }
@@ -476,7 +463,7 @@ public class CustomerWiseSalesReport extends Fragment implements IMarketStractur
                 });
 
             } catch (Exception ex) {
-                if(progressDoalog!=null || progressDoalog.isShowing())
+                if(progressDoalog!=null && progressDoalog.isShowing() && isAdded()) // isAdded: the response can arrive after the screen is closed
                 {
                     progressDoalog.dismiss();
                 }

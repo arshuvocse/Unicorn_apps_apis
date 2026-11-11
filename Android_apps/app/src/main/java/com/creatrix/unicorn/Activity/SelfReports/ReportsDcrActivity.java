@@ -36,6 +36,7 @@ import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.RecyclerAdapter._dcr_ListRecyclerAdapter;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.UtilityHelper;
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;
 import com.creatrix.unicorn.databinding.ActivityReportsDcrBinding;
 import com.creatrix.unicorn.databinding.FilterMasterBinding;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -58,7 +59,7 @@ public class ReportsDcrActivity extends AppCompatActivity implements IDoctor.Vie
     Map<String, String> filter;
     BottomSheetDialog bsheetdlg;
     String fromdat, todate, RoleType, selectedTyp = "";
-    int RoleTypeId,empID;
+    int RoleTypeId,empID,loginEmpId;
 
     DoctorPresenter dpresenter;
     List<DoctorTypeVM> dtypeList;
@@ -83,14 +84,16 @@ public class ReportsDcrActivity extends AppCompatActivity implements IDoctor.Vie
         HashMap<String, String> user = session.getUserDetails();
         String empId = user.get(SessionManagement.KEY_EmpId);
         empID=Integer.parseInt(user.get(SessionManagement.KEY_EmpId));
+        loginEmpId = empID;
         RoleTypeId = Integer.parseInt(user.get(SessionManagement.KEY_EmpRoleTypeId));
         RoleType = user.get(SessionManagement.KEY_EmpRoleType);
         dpresenter.GetProviderType(0);
         dpresenter.GetDoctorType(0);
         dpresenter.GetSMCType(0);
         filter = new HashMap<>();
-        filter.put("FromDt", "");
-        filter.put("ToDt", "");
+        // today, same as the filter shows (an empty date used to return nothing)
+        filter.put("FromDt", UtilityHelper._GetCurrentDate());
+        filter.put("ToDt", UtilityHelper._GetCurrentDate());
         filter.put("EmpId", empId);
         filter.put("providertype","0");
         filter.put("pharmatype","0");
@@ -112,6 +115,13 @@ public class ReportsDcrActivity extends AppCompatActivity implements IDoctor.Vie
         ftm.linearLayoutemp.setVisibility(View.GONE);
         ftm.filterStatusLayout.linearLayout.setVisibility(View.GONE);
         ftm.filterTypeLayout.tilCusttype.setVisibility(View.GONE);
+        // Provider / Pharma type hidden; Sales Person + Doctor added (searchable, like the other reports)
+        ftm.filterTypeLayout.tilProgtypetype.setVisibility(View.GONE);
+        ftm.filterTypeLayout.tilPharmatype.setVisibility(View.GONE);
+        ftm.salesPersonLay.setVisibility(View.VISIBLE);
+        ftm.doctorLay.setVisibility(View.VISIBLE);
+        ReportFilterHelper.loadSalesPersons(ReportsDcrActivity.this, ftm.spinnerSalesPerson);
+        ReportFilterHelper.loadDoctors(ReportsDcrActivity.this, ftm.spinnerDoctor);
         ftm.filterMonthYearLayout.txtFromDate.setText(UtilityHelper._GetCurrentDate());
         ftm.filterMonthYearLayout.txtToDate.setText(UtilityHelper._GetCurrentDate());
         ftm.filterMonthYearLayout.ivDatePickerFromDate.setOnClickListener(v -> {
@@ -172,23 +182,9 @@ public class ReportsDcrActivity extends AppCompatActivity implements IDoctor.Vie
         });
 
         ftm.filterTopLayout.btnDonefilter.setOnClickListener(v -> {
-            switch (selectedTyp) {
-                case "MIO":
-                    MIO mioempid;
-                    mioempid = (MIO) ftm.spinnerApprovalMio.getSelectedItem();
-                    empID = mioempid.getMIOEmpId();
-
-                    break;
-                case "AM":
-                    ASM amempid = (ASM) ftm.spinnerApprovalAsm.getSelectedItem();
-                    empID = amempid.getASMEmpId();
-
-                    break;
-                case "DZSM":
-                    RSM dzsmempid = (RSM) ftm.spinnerApprovalRsm.getSelectedItem();
-                    empID = dzsmempid.getRSMEmpId();
-                    break;
-            }
+            int pickedEmp = ReportFilterHelper.selectedEmpIdOrZero(ftm.spinnerSalesPerson); // 0 = All
+            boolean allTeam = pickedEmp == 0;
+            empID = allTeam ? loginEmpId : pickedEmp;
             fromdat = ftm.filterMonthYearLayout.txtFromDate.getText().toString();
             todate = ftm.filterMonthYearLayout.txtToDate.getText().toString();
             //Map<String,String> filter=new HashMap<>();
@@ -200,17 +196,15 @@ public class ReportsDcrActivity extends AppCompatActivity implements IDoctor.Vie
             } else {
                 filter.put("EmpId", String.valueOf(empID));
             }
-            if (selectedprogramId == null) {
-                filter.put("providertype", "0");
-            } else {
-                filter.put("providertype", selectedprogramId);
-            }
+            filter.put("providertype", "0"); // provider / pharma type filters are hidden
+            filter.put("pharmatype", "0");
             if (selecteddoctortypeId == null) {
                 filter.put("doctortype", "0");
             } else {
                 filter.put("doctortype", selecteddoctortypeId);
             }
-            filter.put("pharmatype",selectedpharmatypeId);
+            filter.put("doctorId", String.valueOf(ReportFilterHelper.selectedDoctorId(ftm.spinnerDoctor)));
+            filter.put("allTeam", String.valueOf(allTeam));
 
             GetDCRList(filter);
             bsheetdlg.cancel();

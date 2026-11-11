@@ -82,6 +82,9 @@ public interface GetDataService {
     @GET("/api/CusDemo/GetAttendanceData")
     Call<List<Report_AttendanceViewModel>> GetAttendanceData(@Query("empId") int empId,@Query("startDate") String startDate,@Query("endDate") String endDate);
 
+    @GET("/api/CusDemo/GetAttendanceData")
+    Call<List<Report_AttendanceViewModel>> GetAttendanceData(@Query("empId") int empId,@Query("startDate") String startDate,@Query("endDate") String endDate,@Query("allTeam") boolean allTeam);
+
     @POST("/api/AppPrimary")
     Call<AppVersionModel> GetAppVersionInfo();
 

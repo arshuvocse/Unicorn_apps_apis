@@ -9,9 +9,8 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClientInstanceAttendance {
-   private static final String BASE_URL = "http://103.244.247.93:217";
-//     private static final String BASE_URL = "http://103.198.137.179:981" ;
-    private static Retrofit retrofit = null;
+   private static final String BASE_URL = AppSetting.newBASE_URL;
+   private static Retrofit retrofit = null;
     public static Retrofit getRetrofitInstance() {
         OkHttpClient clientz =new OkHttpClient.Builder()
                 .connectTimeout(10,TimeUnit.MINUTES)

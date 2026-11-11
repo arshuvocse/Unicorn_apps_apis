@@ -103,6 +103,14 @@ namespace SalesSolutionWebAPI.Controllers
         }
 
         [HttpGet]
+        [Route("api/TourPlan/GetDayWiseTourPlan")]
+        public IHttpActionResult GetDayWiseTourPlan(int empId, int month, int year)
+        {
+            DataTable dt = aDal.GetDayWiseTourPlan(empId, month, year);
+            return Json(JsonConvert.DeserializeObject(JsonConvert.SerializeObject(dt)));
+        }
+
+        [HttpGet]
         [Route("api/TourPlan/GetTourPlanData")]
         public IHttpActionResult Get_TourPlanData(int month,int year,int empId)
         {

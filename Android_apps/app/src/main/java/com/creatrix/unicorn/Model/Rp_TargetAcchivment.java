@@ -1,58 +1,40 @@
 package com.creatrix.unicorn.Model;
 
+// One sub-territory row of api/Reports/GetTargetAchievement (target from tbl_Target_SubTerritoryMonthly).
 public class Rp_TargetAcchivment {
-    private String ProductCode;
-    private String ProductName;
-    private String Qty;
-    private String Value;
-    private String TargetQty;
-    private String Achivment;
+    private String SubTerritoryCode;
+    private String SubTerritoryName;
+    private String TerritoryName;
+    private double TargetAmt;
+    private double SalesAmt;
+    private double AchvPercent;
+    private double BalanceAmt;
 
-    public String getProductCode() {
-        return ProductCode;
+    public String getSubTerritoryCode() {
+        return SubTerritoryCode;
     }
 
-    public void setProductCode(String productCode) {
-        ProductCode = productCode;
+    public String getSubTerritoryName() {
+        return SubTerritoryName;
     }
 
-    public String getProductName() {
-        return ProductName;
+    public String getTerritoryName() {
+        return TerritoryName;
     }
 
-    public void setProductName(String productName) {
-        ProductName = productName;
+    public double getTargetAmt() {
+        return TargetAmt;
     }
 
-    public String getQty() {
-        return Qty;
+    public double getSalesAmt() {
+        return SalesAmt;
     }
 
-    public void setQty(String qty) {
-        Qty = qty;
+    public double getAchvPercent() {
+        return AchvPercent;
     }
 
-    public String getValue() {
-        return Value;
-    }
-
-    public void setValue(String value) {
-        Value = value;
-    }
-
-    public String getTargetQty() {
-        return TargetQty;
-    }
-
-    public void setTargetQty(String targetQty) {
-        TargetQty = targetQty;
-    }
-
-    public String getAchivment() {
-        return Achivment;
-    }
-
-    public void setAchivment(String achivment) {
-        Achivment = achivment;
+    public double getBalanceAmt() {
+        return BalanceAmt;
     }
 }

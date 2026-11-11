@@ -3,6 +3,11 @@ package com.creatrix.unicorn.Model;
 public class Report_AttendanceViewModel {
 
     private int AttendanceId;
+    private String EmpName;
+
+    public String getEmpName() {
+        return EmpName;
+    }
     private String AttendanceDate;
     private String AttendanceType;
     private String AttendanceStatus;

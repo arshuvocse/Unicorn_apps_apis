@@ -143,7 +143,7 @@ public class CustomerPresenter implements ICustomerAdd.Presenter {
                         else if(info.getValiCheck()==true)
                         {
                             progressDoalog.dismiss();
-                            view.onSubmitError("This Customer Already Exist");
+                            view.onSubmitError(TextUtils.isEmpty(info.getErrorMessage()) ? "This Customer Already Exist" : info.getErrorMessage());
                         }
                         else{
                             progressDoalog.dismiss();

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Device-owner policy declaration. No legacy device-admin policies are needed; the device-owner
+     APIs used by TrackingDevicePolicy do not require any <uses-policies> entries. -->
+<device-admin>
+    <uses-policies />
+</device-admin>

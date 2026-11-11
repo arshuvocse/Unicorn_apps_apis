@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Managed configuration an EMM/MDM can push to this app. Read by TrackingPolicy. -->
+<restrictions xmlns:android="http://schemas.android.com/apk/res/android">
+    <restriction
+        android:key="tracking_base_url"
+        android:restrictionType="string"
+        android:title="@string/tracking_restriction_base_url"
+        android:description="@string/tracking_restriction_base_url_desc"
+        android:defaultValue="" />
+    <restriction
+        android:key="tracking_interval_seconds"
+        android:restrictionType="integer"
+        android:title="@string/tracking_restriction_interval"
+        android:description="@string/tracking_restriction_interval_desc"
+        android:defaultValue="300" />
+    <restriction
+        android:key="tracking_user_can_stop"
+        android:restrictionType="bool"
+        android:title="@string/tracking_restriction_user_can_stop"
+        android:defaultValue="true" />
+    <restriction
+        android:key="tracking_enforce_device_policy"
+        android:restrictionType="bool"
+        android:title="@string/tracking_restriction_enforce"
+        android:description="@string/tracking_restriction_enforce_desc"
+        android:defaultValue="false" />
+</restrictions>

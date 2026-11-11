@@ -72,7 +72,11 @@ namespace SalesSolutionWebAPI.Models
     {
         public int ChamberTypeId { get; set; }
         public string Name { get; set; }
-
+        public string Shift { get; set; }
+        public string SittingTime { get; set; }
+        public int? InstitutionId { get; set; }
+        public string InstitutionName { get; set; }
+        public string Address { get; set; }
     }
 
 
@@ -254,7 +258,11 @@ namespace SalesSolutionWebAPI.Models
         public int ChamberTypeId { get; set; }
         public string ChamberTypeName { get; set; }
         public string ChamberName { get; set; }
-
+        public string Shift { get; set; }
+        public string SittingTime { get; set; }
+        public int? InstitutionId { get; set; }
+        public string InstitutionName { get; set; }
+        public string Address { get; set; }
     }
 
 

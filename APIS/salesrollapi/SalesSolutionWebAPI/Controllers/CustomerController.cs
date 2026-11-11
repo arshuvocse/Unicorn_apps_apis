@@ -16,6 +16,13 @@ namespace SalesSolutionWebAPI.Controllers
             return Json(_aRepo.GetCustomerByUser(empId));
 
         }
+
+        [HttpGet]
+        [Route("api/Customer/GetCustomerCountByUser")]
+        public IHttpActionResult GetCustomerCountByUser(int empId)
+        {
+            return Json(_aRepo.GetCustomerCountByUser(empId));
+        }
         [HttpGet]
         [Route("api/Customer/GetCustomerByUserByMobileNo")]
         public IHttpActionResult GetCustomerByUserByMobileNo(int empId, string CellNo)

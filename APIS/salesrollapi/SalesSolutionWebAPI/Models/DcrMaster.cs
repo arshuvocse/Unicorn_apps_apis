@@ -5,6 +5,27 @@ using System.Web;
 
 namespace SalesSolutionWebAPI.Models
 {
+    public class DcrAreaLockDTO
+    {
+        public int EmpInfoId { get; set; }
+        public bool IsLockOff { get; set; }
+        public string Remarks { get; set; }
+        public int? EntryBy { get; set; }
+    }
+
+    public class ChamberLockDTO
+    {
+        public int ChamberId { get; set; }
+        public bool IsLock { get; set; }
+    }
+
+    public class ChamberLocationDTO
+    {
+        public int ChamberId { get; set; }
+        public string Latitude { get; set; }
+        public string Longitude { get; set; }
+    }
+
     public class DcrMaster
     {
        public int DoctorId { get; set; }

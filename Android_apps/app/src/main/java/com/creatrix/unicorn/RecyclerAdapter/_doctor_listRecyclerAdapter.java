@@ -1,5 +1,6 @@
 package com.creatrix.unicorn.RecyclerAdapter;
 
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;
 import android.app.Activity;
 import android.app.ActivityOptions;
 import android.content.Context;
@@ -60,14 +61,7 @@ public class _doctor_listRecyclerAdapter extends RecyclerView.Adapter<_doctor_li
     @Override
     public void onBindViewHolder(@NonNull _doctor_listRecyclerAdapter.BookViewHolder holder, int position) {
 
-        if(aList.get(position).getDoctorName() !=null){
-            holder.nameTxt.setText(aList.get(position).getDoctorName());
-
-        }
-        if(aList.get(position).getDoctorCode() !=null){
-            holder.mobileTxt.setText(aList.get(position).getDocContact());
-
-        }
+        holder.nameTxt.setText(ReportFilterHelper.withCode(aList.get(position).getDoctorCode(), aList.get(position).getDoctorName()));
         if(aList.get(position).getChemberName() !=null){
             holder.chamberTxt.setText(aList.get(position).getChemberName());
 

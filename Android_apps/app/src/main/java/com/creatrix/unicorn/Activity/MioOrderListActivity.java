@@ -29,6 +29,7 @@ import com.creatrix.unicorn.Network.RetrofitClientInstanceTracking;
 import com.creatrix.unicorn.Presenter.MarketStructurePresenter;
 import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.RecyclerAdapter._Mio_OrderList_recyclerAdapter;
+import com.creatrix.unicorn.UtilityHelper.DateTimeUtil;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
 import com.creatrix.unicorn.UtilityHelper.UtilityHelper;
@@ -77,7 +78,7 @@ public class MioOrderListActivity extends AppCompatActivity implements IMarketSt
         HashMap<String, String> user = session.getUserDetails();
         empId = user.get(SessionManagement.KEY_EmpId);
         role = user.get(SessionManagement.KEY_EmpRoleType);
-        today = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault()).format(new Date());
+        today = DateTimeUtil.getDisplayDate();
         Map<String, String> filter = new HashMap<>();
         filter.put("FromDate", today);
         filter.put("ToDate", today);

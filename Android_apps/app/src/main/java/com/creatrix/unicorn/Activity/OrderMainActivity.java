@@ -82,6 +82,7 @@ import com.creatrix.unicorn.RecyclerAdapter.SelectedProductDetailsAdapter;
 import com.creatrix.unicorn.Services.Constants;
 import com.creatrix.unicorn.Setting.AppSetting;
 import com.creatrix.unicorn.UtilityHelper.LocationGet;
+import com.creatrix.unicorn.UtilityHelper.LocationGuard;
 import com.creatrix.unicorn.UtilityHelper.NetworkInformation;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
@@ -169,6 +170,7 @@ public class OrderMainActivity extends AppCompatActivity implements LocationList
     Customer aInfoData;
     String streetAddress = "";
     Double lat, lon;
+    Location lastFix;
     LocationManager locationManager;
 
     @Override
@@ -762,6 +764,10 @@ public class OrderMainActivity extends AppCompatActivity implements LocationList
         orderMain.setTpPercentage(0.0);
         orderMain.setCustomerCode(aInfoData.getCustomerCode());
         orderMain.setSubmittedDate(formattedDate);
+        orderMain.setSubmitLocation(lat, lon, streetAddress);
+        if (lat == null) {
+            getCLocation(); // no fix yet: the order still goes, the next one gets a location
+        }
 
         orderMain.setDeliveryDate(viewBinding.txtDeliveryDate.getText().toString().trim());
 
@@ -854,7 +860,7 @@ public class OrderMainActivity extends AppCompatActivity implements LocationList
         } else {
             //TODO:Checking campaign set or not
             if (productOrder_IsZeroQuantity(productListOrder)) {
-                SnackBarManagement._error_CustomMessage(aMasterlayout, "Product Quantity 0 is not Acceptable");
+                showOrderMessage("Order not placed", zeroQuantityMessage(productListOrder));
             } else {
                 if (NetworkInformation.isConnected(defaultContext)) {
                     orderPresenter.makeOrder2(orderMain, who);
@@ -962,7 +968,7 @@ public class OrderMainActivity extends AppCompatActivity implements LocationList
         } else {
             //TODO:Checking campaign set or not
             if (productOrder_IsZeroQuantity(productListOrder)) {
-                SnackBarManagement._error_CustomMessage(aMasterlayout, "Product Quantity 0 is not Acceptable");
+                showOrderMessage("Order not placed", zeroQuantityMessage(productListOrder));
             } else {
                 if (NetworkInformation.isConnected(defaultContext)) {
                     orderPresenter.makeOrder2(orderMain, who);
@@ -992,8 +998,8 @@ public class OrderMainActivity extends AppCompatActivity implements LocationList
     public void OrderSubmits(Customer aInfoData, String userName, String empId, String extra) {
     /*    int comUnitId = 2;
         Date c = Calendar.getInstance().getTime();
-        SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault());
-        String formattedDate = df.format(c);
+        SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy", Locale.US);
+        String formattedDate = df.format(c).replace("Sept", "Sep");
         String deliveryDate = formattedDate;
         String collectioDate = formattedDate;
 
@@ -1037,7 +1043,7 @@ public class OrderMainActivity extends AppCompatActivity implements LocationList
         } else {
             //TODO:Checking campaign set or not
             if (productOrder_IsZeroQuantity(productListOrder)) {
-                SnackBarManagement._error_CustomMessage(aMasterlayout, "Product Quantity 0 is not Acceptable");
+                showOrderMessage("Order not placed", zeroQuantityMessage(productListOrder));
             } else {
                 if (NetworkInformation.isConnected(defaultContext)) {
                    viewBinding.btnSubmit.setVisibility(View.GONE);
@@ -1114,13 +1120,13 @@ public class OrderMainActivity extends AppCompatActivity implements LocationList
             SnackBarManagement._warning_CustomMessage(aMasterlayout, "Please add atlest one product to submit Order");
         } else {
             if (productOrder_IsZeroQuantity(productListOrder)) {
-                SnackBarManagement._error_CustomMessage(aMasterlayout, "Product Quantity 0 is not Acceptable");
+                showOrderMessage("Order not placed", zeroQuantityMessage(productListOrder));
             } else {
                 boolean isOk = crudHelper.DeleteOrderMasterDetail(orderLocalId);
                 if (isOk == true) {
                     orderPresenter.draftOrder(orderMaster);
                 } else {
-                    SnackBarManagement._error_CustomMessage(aMasterlayout, "Order Not Saved");
+                    showOrderMessage("Draft not saved", "The order could not be saved as a draft on this phone. Please try again.");
                 }
 
             }
@@ -1134,12 +1140,18 @@ public class OrderMainActivity extends AppCompatActivity implements LocationList
         }
         try {
 
-            LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Strict location rule: precise permission + GPS on + fresh, accurate, non-mock fix.
+            String locationError = LocationGuard.checkEnvironment(this);
+            if (locationError == null) {
+                locationError = LocationGuard.checkFix(lastFix);
+            }
+            if (locationError != null) {
+                getCLocation(); // refresh so the next attempt has a new fix
+                ToastManagment.GetLongToast(defaultContext, locationError);
                 return;
             }
 
-            Location location = LocationGet.getLastKnownLocation(defaultContext);
+            Location location = lastFix;
             if (location != null) {
                 CordinateUpdate cordinateUpdate = new CordinateUpdate();
                 cordinateUpdate.setId(customerId);
@@ -1302,11 +1314,16 @@ public class OrderMainActivity extends AppCompatActivity implements LocationList
                 @Override
                 public void onResponse(@NonNull Call<List<CampaignCalModel>> call, @NonNull Response<List<CampaignCalModel>> response) {
                     progressDoalog.dismiss();
-                    if (response != null) {
-                        viewBinding.cardOrderSummary.setVisibility(View.VISIBLE);
-                        viewBinding.campaignDiv.setVisibility(View.VISIBLE);
-                        SetCampaignShowToCustomer(response.body());
+                    if (!response.isSuccessful() || response.body() == null) {
+                        showOrderMessage("Campaign not calculated",
+                                "The campaign could not be calculated for the products in this order (server code "
+                                        + response.code() + ").\n\nIf you added several products, remove one and select the campaign again, "
+                                        + "or place them as separate orders.");
+                        return;
                     }
+                    viewBinding.cardOrderSummary.setVisibility(View.VISIBLE);
+                    viewBinding.campaignDiv.setVisibility(View.VISIBLE);
+                    SetCampaignShowToCustomer(response.body());
 
                 }
 
@@ -1314,17 +1331,18 @@ public class OrderMainActivity extends AppCompatActivity implements LocationList
                 public void onFailure(Call<List<CampaignCalModel>> call, Throwable t) {
                     progressDoalog.dismiss();
                     if (t instanceof SocketTimeoutException) {
-                        ToastManagment.GetLongToast(OrderMainActivity.this, "Some thing went wrong. Please try again");
+                        showOrderMessage("Slow connection", "The server took too long to calculate the campaign. Please try again.");
+                    } else if (t instanceof java.io.IOException) {
+                        showOrderMessage("No connection", "Could not reach the server. Please check your internet connection and try again.");
                     } else {
-                        ToastManagment.GetLongToast(OrderMainActivity.this, "Some thing went wrong. Please try again");
-
+                        showOrderMessage("Campaign not calculated", "The campaign could not be calculated. Please try again.");
                     }
                 }
             });
 
         } catch (Exception ex) {
             progressDoalog.dismiss();
-            SnackBarManagement._error_CustomMessage(viewBinding.masterLayoutId, "Some thing went wrong. Please try again");
+            showOrderMessage("Campaign not calculated", "The campaign could not be calculated. Please try again.");
             ex.printStackTrace();
         }
     }
@@ -1352,7 +1370,11 @@ public class OrderMainActivity extends AppCompatActivity implements LocationList
     public void setCustomerText(Customer aCustomer) {
         viewBinding.customerName.setText(aCustomer.getCustomerName());
         viewBinding.customerCodeTxt.setText(aCustomer.getCustomerCode());
-        viewBinding.customerAdressTxt.setText(aCustomer.getAddress());
+        String billing = aCustomer.getAddress() == null ? "" : aCustomer.getAddress();
+        // No separate delivery address stored yet -> delivery defaults to billing address
+        String delivery = TextUtils.isEmpty(aCustomer.getAddrees2()) ? billing : aCustomer.getAddrees2();
+        viewBinding.customerAdressTxt.setText("Billing Address: " + billing);
+        viewBinding.customerDeliveryAdressTxt.setText("Delivery Address: " + delivery);
     }
     private void LoadDepoStock(List<DepoStockModel> stocklist, RecyclerView rvStock) {
         DepoStockAdapter mAdapter = new DepoStockAdapter(stocklist, OrderMainActivity.this);
@@ -1883,8 +1905,36 @@ public class OrderMainActivity extends AppCompatActivity implements LocationList
     public void onOrderError(String message) {
         //  Toast.makeText(this, "Error : " + message, Toast.LENGTH_SHORT).show();
 
-        SnackBarManagement._error_CustomMessage(viewBinding.masterLayoutId, message);
-        //  fun_SelectCampaignButtonClick();
+        // A dialog (not a snackbar) so the full reason stays on screen until the user reads it.
+        String reason = (message == null || message.trim().isEmpty())
+                ? "The order could not be placed. Please try again." : message.trim();
+        showOrderMessage("Order not placed", reason);
+    }
+
+    private void showOrderMessage(String title, String message) {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+        new AlertDialog.Builder(OrderMainActivity.this)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    private String zeroQuantityMessage(List<Product> products) {
+        StringBuilder names = new StringBuilder();
+        if (products != null) {
+            for (Product product : products) {
+                if (product.getQuantity() == 0) {
+                    if (names.length() > 0) names.append(", ");
+                    names.append(product.getProductName());
+                }
+            }
+        }
+        return names.length() == 0
+                ? "Every product needs a quantity greater than 0."
+                : "Please enter a quantity greater than 0 for: " + names + ".";
     }
 
     @Override
@@ -2030,12 +2080,19 @@ public class OrderMainActivity extends AppCompatActivity implements LocationList
 
 
     public void getCLocation() {
-        try {
-            locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 500, 5, (android.location.LocationListener) this);
-        } catch (SecurityException e) {
-            e.printStackTrace();
-        }
+        LocationGuard.requestFix(this, (location, error) -> {
+            if (location == null) {
+                lastFix = null;
+                lat = null;
+                lon = null;
+                Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+                return;
+            }
+            lastFix = location;
+            lat = location.getLatitude();
+            lon = location.getLongitude();
+            streetAddress = LocationGuard.addressOf(this, location);
+        });
     }
 
     @Override

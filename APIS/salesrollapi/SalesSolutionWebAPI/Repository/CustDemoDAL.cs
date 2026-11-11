@@ -623,7 +623,7 @@ namespace SalesSolutionWebAPI.Repository
         }
 
 
-        public DataTable GetEmpAppAttendance(int empId,string fromDate, string toDate)
+        public DataTable GetEmpAppAttendance(int empId,string fromDate, string toDate, bool allTeam = false)
         {
             try
             {
@@ -632,6 +632,7 @@ namespace SalesSolutionWebAPI.Repository
                 aSqlParameterlist.Add(new SqlParameter("@empId", empId));
                 aSqlParameterlist.Add(new SqlParameter("@fromDate", fromDate));
                 aSqlParameterlist.Add(new SqlParameter("@toDate", toDate));
+                aSqlParameterlist.Add(new SqlParameter("@allTeam", allTeam));
                 DataTable dt = accessManager.GetDataTable("sp_WebAPI_GetAttendanceData_New", aSqlParameterlist);
                 return dt;
             }

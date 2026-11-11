@@ -26,6 +26,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class TPAdapter extends RecyclerView.Adapter<TPAdapter.DVPH> {
     Context c;
@@ -49,8 +50,8 @@ public class TPAdapter extends RecyclerView.Adapter<TPAdapter.DVPH> {
         TourPlanViewModel data = aList.get(position);
         SimpleDateFormat dateV = new SimpleDateFormat("dd");
         SimpleDateFormat dayName = new SimpleDateFormat("EEE");
-        SimpleDateFormat mdates = new SimpleDateFormat("dd MMM");
-        SimpleDateFormat fmt2 = new SimpleDateFormat("EEE, dd MMM");
+        SimpleDateFormat mdates = new SimpleDateFormat("dd MMM", Locale.US);
+        SimpleDateFormat fmt2 = new SimpleDateFormat("EEE, dd MMM", Locale.US);
         SimpleDateFormat inpdate = new SimpleDateFormat("yyyy-MM-dd");
             Date date = null;
             String day = null;
@@ -59,7 +60,7 @@ public class TPAdapter extends RecyclerView.Adapter<TPAdapter.DVPH> {
             try {
                 date = inpdate.parse(data.getTourPlanDate());
                 day = dayName.format(date);
-                mdate = mdates.format(date);
+                mdate = mdates.format(date).replace("Sept", "Sep");
             } catch (ParseException e) {
                 e.printStackTrace();
             }

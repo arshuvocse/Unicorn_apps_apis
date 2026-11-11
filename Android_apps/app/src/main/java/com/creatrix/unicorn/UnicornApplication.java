@@ -8,12 +8,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.provider.Settings;
 
 import com.creatrix.unicorn.Activity.MainActivity;
 import com.creatrix.unicorn.HelperActivity.SplashScreenActivity;
 import com.creatrix.unicorn.Services.LocationService;
+import com.creatrix.unicorn.Services.TrackingWatchdogWorker;
+import com.creatrix.unicorn.UtilityHelper.BackgroundAccess;
 import com.creatrix.unicorn.UtilityHelper.LocationAccess;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 
@@ -91,6 +95,10 @@ public class UnicornApplication extends Application implements Application.Activ
 
         if (new SessionManagement(activity).isLoggedIn()) {
             LocationService.start(activity);
+            TrackingWatchdogWorker.schedule(activity);
+            BackgroundAccess.enforceBatteryExemption(activity);
+            BackgroundAccess.enforceAllTheTimeLocation(activity);
+            BackgroundAccess.promptAutostartOnce(activity);
         }
 
         checkAndShowGpsDialog(activity);

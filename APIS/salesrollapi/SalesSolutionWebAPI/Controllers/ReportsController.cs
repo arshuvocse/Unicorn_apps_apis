@@ -149,6 +149,15 @@ namespace SalesSolutionWebAPI.Controllers
         }
 
         [HttpGet]
+        [Route("api/Reports/GetTargetAchievement")]
+        public IHttpActionResult GetTargetAchievement(int empId, int month, int year, int selectedEmpId = 0)
+        {
+            DataTable dt = aDal.GetTargetAchievementSubTerritory(empId, month, year, selectedEmpId);
+            dynamic json = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(dt));
+            return Json(json);
+        }
+
+        [HttpGet]
         [Route("api/Reports/GetTadaList")]
         public IHttpActionResult GetTadaList(int userId)
         {
@@ -165,10 +174,10 @@ namespace SalesSolutionWebAPI.Controllers
 
         [HttpGet]
         [Route("api/Reports/GetCWSR")]
-        public IHttpActionResult GetCustWiseOrderReport(string Role, string empId, string Month, string Year, string type, string ProviderType, string CustomerType)
+        public IHttpActionResult GetCustWiseOrderReport(string Role, string empId, string Month, string Year, string type, string ProviderType, string CustomerType, string CustomerId = null)
         {
 
-            return Json(aDal.GetCustWiseOrderReportDAL(Role, empId, Month, Year, type, ProviderType, CustomerType));
+            return Json(aDal.GetCustWiseOrderReportDAL(Role, empId, Month, Year, type, ProviderType, CustomerType, CustomerId));
 
         }
 
@@ -184,10 +193,10 @@ namespace SalesSolutionWebAPI.Controllers
 
         [HttpGet]
         [Route("api/Reports/GetPWSR")]
-        public IHttpActionResult GetProductWiseOrderReport(string Role, string empId, string Month, string Year, string type, string ProviderType, string CustomerType)
+        public IHttpActionResult GetProductWiseOrderReport(string Role, string empId, string Month, string Year, string type, string ProviderType, string CustomerType, string CustomerId = null)
         {
 
-            return Json(aDal.GetProductWiseOrderReportDAL (Role, empId, Month,  Year, type, ProviderType, CustomerType));
+            return Json(aDal.GetProductWiseOrderReportDAL (Role, empId, Month,  Year, type, ProviderType, CustomerType, CustomerId));
 
         }
 
@@ -230,6 +239,18 @@ namespace SalesSolutionWebAPI.Controllers
         {
             
             return Json(aDal.GetTerritoryTargetvsAcchive(empId, FromDate, ToDate, Role));
+        }
+
+
+        [HttpGet]
+        [Route("api/Reports/GetTourPlanReport")]
+        public IHttpActionResult GetTourPlanReport(int empId, int selectedEmpId = 0, string FromDt = null, string ToDt = null, int doctorId = 0, int customerId = 0)
+        {
+            DataTable dt = aDal.GetTourPlanReport(empId, selectedEmpId, FromDt, ToDt, doctorId, customerId);
+            string JSONresult;
+            JSONresult = JsonConvert.SerializeObject(dt);
+            dynamic json = JsonConvert.DeserializeObject(JSONresult);
+            return Json(json);
         }
 
 

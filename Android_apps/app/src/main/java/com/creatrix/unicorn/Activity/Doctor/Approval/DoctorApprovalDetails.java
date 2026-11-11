@@ -209,6 +209,13 @@ public class DoctorApprovalDetails extends AppCompatActivity implements IDoctorA
             }
 
         }
+        // DZSM (RoleTypeId 3) can approve/reject any item, whoever it is waiting on
+        if (RoleTypeId == 3) {
+            binding.edit.setVisibility(View.VISIBLE);
+            binding.approveLayout.btnApprove.setVisibility(View.VISIBLE);
+            binding.approveLayout.btnReject.setVisibility(View.VISIBLE);
+            binding.warnToast.setVisibility(View.GONE);
+        }
 
         List<ChembarTypeWithName> cl = dl.getDoctorMasterDao().getaChemberListDAO();
         binding.tvName.setText(dl.getDoctorMasterDao().getDoctorName());

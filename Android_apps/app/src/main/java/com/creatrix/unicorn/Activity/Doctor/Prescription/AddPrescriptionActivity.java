@@ -39,6 +39,7 @@ import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.RecyclerAdapter._product_NameRecycler;
 import com.creatrix.unicorn.Services.Constants;
 import com.creatrix.unicorn.UtilityHelper.CameraHelper;
+import com.creatrix.unicorn.UtilityHelper.DateTimeUtil;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
 import com.creatrix.unicorn.UtilityHelper.ToastManagment;
@@ -93,7 +94,7 @@ public class AddPrescriptionActivity extends AppCompatActivity implements IPresc
         progressDoalog = new ProgressDialog(AddPrescriptionActivity.this);
         HashMap<String, String> user = session.getUserDetails();
         int empId = Integer.parseInt(Objects.requireNonNull(user.get(SessionManagement.KEY_EmpId)));
-        binding.presdate.setText(new SimpleDateFormat("dd-MMM-yyyy | hh:mm a", Locale.getDefault()).format(new Date()));
+        binding.presdate.setText(DateTimeUtil.getFormattedDate("dd-MMM-yyyy | hh:mm a"));
         presenter = new PrescriptionPresenter(this, this);
 
         Gson gson = new Gson();
@@ -238,7 +239,7 @@ public class AddPrescriptionActivity extends AppCompatActivity implements IPresc
                 .compress(1024)            //Final image size will be less than 1 MB(Optional)
                 .maxResultSize(1080, 1080)    //Final image resolution will be less than 1080 x 1080(Optional)
                 .start());
-        binding.presdate.setText(new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault()).format(new Date()));
+        binding.presdate.setText(DateTimeUtil.getDisplayDate());
 
 
     }
@@ -662,8 +663,8 @@ public class AddPrescriptionActivity extends AppCompatActivity implements IPresc
                 aPres.setDoclist(dvm);
                 aPres.setPrescriptionTypeId(id);
                 aPres.setPrescTypeName(ptypename);
-                aPres.setPrescriptionDate(binding.presdate.getText().toString().trim());
-                aPres.setEntryTime(new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date()));
+                aPres.setPrescriptionDate(binding.presdate.getText().toString().trim().replace("Sept", "Sep"));
+                aPres.setEntryTime(new SimpleDateFormat("hh:mm a", Locale.US).format(new Date()));
                 aPres.setImageString(String.valueOf(imageuri));
                 aPres.setaProList(aFinalProductList);
                 aPres.setSessionUser(empId);

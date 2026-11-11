@@ -1,5 +1,6 @@
 package com.creatrix.unicorn.Activity.Customer.Pending;
-import android.content.Context;
+
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.view.LayoutInflater;
@@ -72,7 +73,7 @@ public class CustomerUpdatAdapter extends RecyclerView.Adapter<CustomerUpdatAdap
             holder.llapprovalwaiting.setVisibility(View.GONE);
             holder.llstatus.setVisibility(View.GONE);
 
-            holder.custName.setText(ps.getCustomerName());
+            holder.custName.setText(ReportFilterHelper.withCode(ps.getCustomerCode(), ps.getCustomerName()));
             holder.custmarket.setText(ps.getMarketName());
             holder.custmobile.setText(ps.getCellNo());
             holder.custowner.setText(ps.getOwnerName());

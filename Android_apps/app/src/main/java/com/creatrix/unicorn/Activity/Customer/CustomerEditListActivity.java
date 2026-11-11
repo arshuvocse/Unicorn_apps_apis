@@ -1,5 +1,6 @@
 package com.creatrix.unicorn.Activity.Customer;
 
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
@@ -301,7 +302,7 @@ public class CustomerEditListActivity  extends AppCompatActivity implements ICus
 
                 ArrayList<Customer> arrayList = new ArrayList<>();
                 for (Customer item : customerArrayList) {
-                    if ((item.getCustomerName().toLowerCase().contains(customerName.toLowerCase()) || (item.getCustomerCode().contains(customerName)))) {
+                    if (ReportFilterHelper.matches(item.getCustomerCode(), item.getCustomerName(), customerName)) {
                         arrayList.add(item);
                     }
                 }

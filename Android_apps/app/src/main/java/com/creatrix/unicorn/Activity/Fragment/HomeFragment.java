@@ -58,6 +58,7 @@ import com.creatrix.unicorn.Presenter.ProductPresenter;
 import com.creatrix.unicorn.Presenter.VersionPresenter;
 import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.Services.Constants;
+import com.creatrix.unicorn.UtilityHelper.DateTimeUtil;
 import com.creatrix.unicorn.UtilityHelper.NetworkInformation;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
@@ -219,8 +220,7 @@ public class HomeFragment extends Fragment implements IProduct.View, IMioDashboa
         noticePresenter.getNoticesforPop(empId);
         presenterP = new PendingCounterPresenter(this, getContext());
         Date c = Calendar.getInstance().getTime();
-        SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault());
-        currentDate = df.format(c);
+        currentDate = DateTimeUtil.getDisplayDate(c);
         if (NetworkInformation.isConnected(requireActivity())) {
             mioDashboadPresenter.getDashboardSummeryData(empId, currentDate);
         } else {

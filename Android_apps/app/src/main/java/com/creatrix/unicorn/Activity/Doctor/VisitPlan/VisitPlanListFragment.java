@@ -66,7 +66,7 @@ public class VisitPlanListFragment extends Fragment implements IVisitPlan.View {
 
         String monName = monthNameFull[month];
         String monWITHyear=monName+","+String.valueOf(year);
-        SimpleDateFormat fmt2d = new SimpleDateFormat("MMM,yyyy", Locale.getDefault());
+        SimpleDateFormat fmt2d = new SimpleDateFormat("MMM,yyyy", Locale.US);
         //fmt2d.format(cal.getTime())
         binding.tvMonthYear.setText(monWITHyear);
         aMondateList= CalculateTotaldayesinMonth(mCalendar,daysInMonth,year,month);

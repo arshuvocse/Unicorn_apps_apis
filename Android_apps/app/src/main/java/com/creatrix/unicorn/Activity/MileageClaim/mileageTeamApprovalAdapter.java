@@ -144,6 +144,8 @@ public class mileageTeamApprovalAdapter extends RecyclerView.Adapter<mileageTeam
                     e.printStackTrace();
                 }
             }
+            // DZSM (RoleTypeId 3) can approve/reject any item, whoever it is waiting on
+            if (RoleTypeId == 3) holder.tv_approve.setVisibility(View.VISIBLE);
 
             holder.tv_approve.setOnClickListener(v -> {
              click.approvalKlick(elt);

@@ -3,7 +3,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:paddingBottom="12dp">
 
     <TextView
         android:id="@+id/cmbrtype"
@@ -12,46 +13,131 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:padding="8dp"
-        android:textSize="16sp"
+        android:padding="12dp"
+        android:textSize="17sp"
+        android:fontFamily="@font/lato_bold"
         android:gravity="center"
         android:background="@color/main"
         android:textColor="@color/white"/>
+
+    <!-- Shift Selection (Morning / Evening) -->
+    <RadioGroup
+        android:id="@+id/rg_shift"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="14dp"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@+id/cmbrtype"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <RadioButton
+            android:id="@+id/rb_morning"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:checked="true"
+            android:fontFamily="@font/lato_bold"
+            android:text="Morning Chamber"
+            android:textColor="@color/black"
+            android:textSize="14sp" />
+
+        <RadioButton
+            android:id="@+id/rb_evening"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="@font/lato_bold"
+            android:text="Evening Chamber"
+            android:textColor="@color/black"
+            android:textSize="14sp" />
+    </RadioGroup>
+
+    <!-- Chamber Name -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/chamberDD"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp"
-        app:layout_constraintTop_toBottomOf="@+id/cmbrtype"
-        android:hint="Institute Name"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="12dp"
+        app:layout_constraintTop_toBottomOf="@+id/rg_shift"
+        android:hint="Chamber Name *"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        >
+        app:layout_constraintStart_toStartOf="parent">
 
         <EditText
             android:id="@+id/chamberName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:inputType="textCapWords"
+            android:fontFamily="@font/latoregular"
+            android:textSize="15sp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Sitting Time -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/til_sitting_time"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="12dp"
+        app:layout_constraintTop_toBottomOf="@+id/chamberDD"
+        android:hint="Sitting Time * (e.g. 10:00 AM - 01:00 PM)"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <EditText
+            android:id="@+id/sittingTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:inputType="text"
-            />
+            android:fontFamily="@font/latoregular"
+            android:textSize="15sp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Address -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/til_chamber_address"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="12dp"
+        app:layout_constraintTop_toBottomOf="@+id/til_sitting_time"
+        android:hint="Address"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <EditText
+            android:id="@+id/chamberAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPostalAddress"
+            android:fontFamily="@font/latoregular"
+            android:textSize="15sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
         android:id="@+id/cmbrBnt"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="14dp"
         android:background="@color/main"
-        android:elevation="5dp"
+        android:elevation="4dp"
         android:text="Submit"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp"
-        android:layout_marginBottom="10dp"
+        android:fontFamily="@font/lato_bold"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
         android:textColor="@color/white"
+        android:textSize="15sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/chamberDD"
-        />
+        app:layout_constraintTop_toBottomOf="@+id/til_chamber_address" />
 </androidx.constraintlayout.widget.ConstraintLayout>

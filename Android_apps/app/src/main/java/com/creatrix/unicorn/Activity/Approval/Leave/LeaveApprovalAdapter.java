@@ -145,6 +145,8 @@ public class LeaveApprovalAdapter extends RecyclerView.Adapter<LeaveApprovalAdap
                     }
                 }
             }
+            // DZSM (RoleTypeId 3) can approve/reject any item, whoever it is waiting on
+            if (RoleTypeId == 3 && la.getToRoleTypeId() != null) holder.tv_approve.setVisibility(View.VISIBLE);
 
             holder.tv_approve.setOnClickListener(v -> {
                 click.approvalTLeave(la);

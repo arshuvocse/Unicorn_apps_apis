@@ -2,6 +2,7 @@ package com.creatrix.unicorn.Model;
 
 import com.creatrix.unicorn.Model.Doctor.DoctorBrand;
 import com.creatrix.unicorn.Model.Doctor.DoctorListViewModel;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
@@ -33,6 +34,12 @@ public class DcrSM {
     transient int ReasonId;
     String EntryDate_Apps;
 
+    @SerializedName(value = "shift", alternate = {"Shift"})
+    String Shift;
+
+    @SerializedName(value = "isMorning", alternate = {"IsMorning"})
+    String IsMorning;
+
     DoctorListViewModel doclist;
     List<Gift> giftList;
     List<ProductSample> sampleList;
@@ -40,9 +47,8 @@ public class DcrSM {
     List<UserByRole> aempList;
 
     String Latitude;
-    String Longitude ;
+    String Longitude;
     String StreetAddress;
-
 
     public String getLatitude() {
         return Latitude;
@@ -91,6 +97,7 @@ public class DcrSM {
     public void setVisitTypeName(String visitTypeName) {
         VisitTypeName = visitTypeName;
     }
+
     String Type;
 
     public String getType() {
@@ -221,6 +228,22 @@ public class DcrSM {
         EntryDate_Apps = entryDate_Apps;
     }
 
+    public String getShift() {
+        return Shift;
+    }
+
+    public void setShift(String shift) {
+        Shift = shift;
+    }
+
+    public String getIsMorning() {
+        return IsMorning;
+    }
+
+    public void setIsMorning(String isMorning) {
+        IsMorning = isMorning;
+    }
+
     public DoctorListViewModel getDoclist() {
         return doclist;
     }
@@ -239,6 +262,6 @@ public class DcrSM {
 
     @Override
     public String toString() {
-        return DoctorName + DcrDate + EntryTime ;
+        return DoctorName + DcrDate + EntryTime;
     }
 }

@@ -198,6 +198,12 @@ public class ExpenceClaimViewActivity extends AppCompatActivity implements ITeam
                         }
                     }
                 }
+                // DZSM (RoleTypeId 3) can approve/reject any item, whoever it is waiting on
+                if (RoleTypeId == 3) {
+                    binding.approveLayout.btnApprove.setVisibility(View.VISIBLE);
+                    binding.approveLayout.btnReject.setVisibility(View.VISIBLE);
+                    binding.warnToast.setVisibility(View.GONE);
+                }
                 binding.approveLayout.approvemaster.setVisibility(View.VISIBLE);
                 binding.approveLayout.btnApprove.setOnClickListener(v -> {
                     ApproveExpRQ req=new ApproveExpRQ();

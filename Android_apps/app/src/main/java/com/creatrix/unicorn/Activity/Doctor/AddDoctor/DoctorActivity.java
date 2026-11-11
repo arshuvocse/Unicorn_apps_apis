@@ -4,6 +4,12 @@ import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
@@ -11,11 +17,13 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.InputFilter;
-import android.text.Spanned;
+import android.text.InputType;
 import android.text.TextUtils;
+import android.widget.LinearLayout;
 import android.text.method.DigitsKeyListener;
 import android.text.method.TextKeyListener;
 import android.util.Log;
+import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,6 +32,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -80,6 +90,7 @@ import com.creatrix.unicorn.RecyclerAdapter._specialday_ListAdapter;
 import com.creatrix.unicorn.Services.Constants;
 import com.creatrix.unicorn.UtilityHelper.NetworkInformation;
 import com.creatrix.unicorn.UtilityHelper.LocationGet;
+import com.creatrix.unicorn.UtilityHelper.LocationGuard;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
 import com.creatrix.unicorn.UtilityHelper.UtilityHelper;
@@ -149,8 +160,10 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
     int selectedDoctypeId, selectedchembarTypeId, selectedsclialdayId,selectedcontactTypeId;
     String selectedchembarTypeName,selectedcontactTypeName,selectedsclialdayName;
     TextView cmbrtype,contacttype;
-    EditText chamberName,contactName;
-    TextInputLayout til_chamberDD;
+    EditText chamberName,contactName,sittingTime,chamberAddress;
+    TextInputLayout til_chamberDD,til_sittingTime,til_chamberAddress,til_contactName;
+    RadioGroup rgShift;
+    RadioButton rbMorning, rbEvening;
     String roleType;
     int brand_count = 0;
     int selectedbrand_count = 0;
@@ -159,7 +172,6 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
 
     String edit_dName,spcialday, latitude, longitude;
     int edit_did;
-    public String blockCharacterSet = "@~'#^|$%&*!/?>";
     boolean is_Contact,is_Chamber;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -172,7 +184,7 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
         dbDoctorHelper = new DBDoctorHelper(DoctorActivity.this);
         dbddtuHelper = new DBDDTUHelper(DoctorActivity.this);
         setContentView(mainView);
-        viewBinding.docName.setFilters(new InputFilter[]{filter});
+        setupFieldReorder();
 
         presenter = new DoctorPresenter(this, DoctorActivity.this);
         mpresenter = new MarketStructurePresenter(this, DoctorActivity.this);
@@ -406,11 +418,13 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
             }
         });
         LocationManager locationManagerdd = (LocationManager) getSystemService(LOCATION_SERVICE);
-        if (locationManagerdd.isProviderEnabled(locationManagerdd.GPS_PROVIDER)) {
+        if (locationManagerdd != null && (locationManagerdd.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManagerdd.isProviderEnabled(LocationManager.NETWORK_PROVIDER))) {
         } else {
             showGPSDisabledAlertToUser();
         }
         viewBinding.location.setOnClickListener(v -> showCurrentLocation());
+        viewBinding.latlon.setOnClickListener(v -> showManualLocationDialog());
+        showCurrentLocation(false);
         // viewBinding.docName.setFilters(new InputFilter[]{new InputFilter.AllCaps()});
         viewBinding.degreeAdd.setOnClickListener(view -> LoadDegree());
         viewBinding.degreeSection.setOnClickListener(view -> LoadDegree());
@@ -449,14 +463,127 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
     }
 
     private void showCurrentLocation() {
-        Location location = LocationGet.getLastKnownLocation(this);
-        if (location == null) {
-            Toast.makeText(this, "Current location is unavailable", Toast.LENGTH_SHORT).show();
+        showCurrentLocation(true);
+    }
+
+    /**
+     * @param userInitiated false for the silent attempt on page load: no toasts, and no manual-entry
+     *                       dialog popped on failure (that would surprise the user before they asked for it).
+     */
+    private void showCurrentLocation(boolean userInitiated) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (userInitiated) {
+                ActivityCompat.requestPermissions(this, new String[]{
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                }, 1001);
+            }
             return;
         }
-        latitude = String.valueOf(location.getLatitude());
-        longitude = String.valueOf(location.getLongitude());
-        viewBinding.latlon.setText(latitude + "," + longitude);
+        viewBinding.latlon.setText("Fetching location...");
+        if (userInitiated) {
+            Toast.makeText(this, "Fetching location...", Toast.LENGTH_SHORT).show();
+        }
+        android.util.Log.d("DoctorActivity", "Requesting location fix via LocationGuard...");
+        LocationGuard.requestFix(this, (location, error) -> {
+            if (location == null) {
+                Location fallback = LocationGuard.getBestLocationFromManager(this);
+                if (fallback != null && !LocationGuard.isMock(fallback)) {
+                    latitude = String.valueOf(fallback.getLatitude());
+                    longitude = String.valueOf(fallback.getLongitude());
+                    viewBinding.latlon.setText(latitude + "," + longitude);
+                    if (userInitiated) {
+                        Toast.makeText(this, "Location detected", Toast.LENGTH_SHORT).show();
+                    }
+                    return;
+                }
+                if (latitude == null || latitude.isEmpty()) {
+                    viewBinding.latlon.setText("Tap to enter location");
+                } else {
+                    viewBinding.latlon.setText(latitude + "," + longitude);
+                }
+                if (userInitiated) {
+                    Toast.makeText(this, (error != null ? error : "Location not found.") + " Tap the location field to enter it manually.", Toast.LENGTH_LONG).show();
+                }
+                return;
+            }
+            latitude = String.valueOf(location.getLatitude());
+            longitude = String.valueOf(location.getLongitude());
+            viewBinding.latlon.setText(latitude + "," + longitude);
+            if (userInitiated) {
+                Toast.makeText(this, "Location detected: " + latitude + "," + longitude, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showManualLocationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Doctor Location (Coordinates)");
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(60, 40, 60, 20);
+
+        TextView hintText = new TextView(this);
+        hintText.setText("Enter Latitude and Longitude coordinates manually or retry GPS detection:");
+        hintText.setTextSize(13);
+        hintText.setTextColor(Color.DKGRAY);
+        hintText.setPadding(0, 0, 0, 20);
+        layout.addView(hintText);
+
+        final EditText inputLat = new EditText(this);
+        inputLat.setHint("Latitude (e.g. 23.8103)");
+        inputLat.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED);
+        if (latitude != null && !latitude.isEmpty()) {
+            inputLat.setText(latitude);
+        }
+        layout.addView(inputLat);
+
+        final EditText inputLon = new EditText(this);
+        inputLon.setHint("Longitude (e.g. 90.4125)");
+        inputLon.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED);
+        if (longitude != null && !longitude.isEmpty()) {
+            inputLon.setText(longitude);
+        }
+        layout.addView(inputLon);
+
+        builder.setView(layout);
+
+        builder.setPositiveButton("Set Location", (dialog, which) -> {
+            String latStr = inputLat.getText().toString().trim();
+            String lonStr = inputLon.getText().toString().trim();
+            if (!latStr.isEmpty() && !lonStr.isEmpty()) {
+                latitude = latStr;
+                longitude = lonStr;
+                viewBinding.latlon.setText(latitude + "," + longitude);
+                Toast.makeText(this, "Location set: " + latitude + "," + longitude, Toast.LENGTH_SHORT).show();
+            } else {
+                latitude = null;
+                longitude = null;
+                viewBinding.latlon.setText("Tap to enter location");
+            }
+        });
+
+        builder.setNeutralButton("Retry GPS", (dialog, which) -> {
+            showCurrentLocation();
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+        builder.show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1001) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                showCurrentLocation();
+            } else {
+                Toast.makeText(this, "Location permission is required to detect location", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     public void SubmitClick(int empId) {
@@ -487,32 +614,34 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
                     instituteIdStr = institute;
                 }
             }
+            String rawInstitute = viewBinding.instituteListStr.getText().toString().trim();
+            if (rawInstitute.isEmpty() || rawInstitute.equals("----") || instituteIdStr.isEmpty()) {
+                SnackBarManagement._warning_CustomMessage(viewBinding.masterLayoutId, "Gender is mandatory! Please select Gender.");
+                return;
+            }
             institute = instituteIdStr;
             String docBrand = viewBinding.brandListStr.getText().toString();
-            String docAddress = viewBinding.docAddress.getText().toString();
+            String docAddress = viewBinding.docAddress.getText().toString().trim();
 
+            if (docName.trim().isEmpty()) {
+                viewBinding.docName.setError("Doctor Name is required");
+                viewBinding.docName.requestFocus();
+                SnackBarManagement._warning_CustomMessage(viewBinding.masterLayoutId, "Doctor Name is required!");
+                return;
+            }
+
+            if (docAddress.isEmpty()) {
+                viewBinding.docAddress.setError("Doctor Address is required");
+                viewBinding.docAddress.requestFocus();
+                SnackBarManagement._warning_CustomMessage(viewBinding.masterLayoutId, "Doctor Address is mandatory!");
+                return;
+            }
 
             DoctorTypeVM doctorType = (DoctorTypeVM) viewBinding.doctorTypeSpinner.getSelectedItem();
             int dtypeid = doctorType.getDoctorTypeId();
 
-           /* DoctorChamberTypeVM chamberType = (DoctorChamberTypeVM) viewBinding.chamberSpinner.getSelectedItem();
-            int chamberId = chamberType.getChamberId();
-            String chamberAddress = viewBinding.chamberAddress.getText().toString();*/
-
-            //TODO:Contact Type
-          /*   ContactTypeVM contactType = (ContactTypeVM) viewBinding.contactTypeSpinner.getSelectedItem();
-            int contactId = contactType.getContactTypeId();
-            String contactDD = viewBinding.contactTxt.getText().toString();*/
-
             DoctorCategory catType = (DoctorCategory) viewBinding.doctorCategorySpinner.getSelectedItem();
             int catTypeId = catType.getCategoryId();
-
-           /* SpecialDay spday = (SpecialDay) viewBinding.spcialdayTypeSpinner.getSelectedItem();
-            int spdayId = spday.getSpecialDayId();*/
-
-           /* StationType stationType = (StationType) viewBinding.custStationTypeSpinner.getSelectedItem();
-            int stationTypeId = stationType.getStationTypeId();*/
-
 
             DoctorDesignation docDesi = (DoctorDesignation) viewBinding.designationSpinner.getSelectedItem();
             int designationId = docDesi.getDesignationId();
@@ -521,9 +650,24 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
             for (int i = 0; i < itemList.size(); i++) {
                 String chamberName = itemList.get(i).getChamberName();
                 int chamberTypeId = itemList.get(i).getChamberTypeId();
+                String shift = itemList.get(i).getShift();
+                String sitTime = itemList.get(i).getSittingTime();
+                int instId = itemList.get(i).getInstitutionId();
+                if (instId == 0) {
+                    instId = chamberTypeId;
+                }
+                String instName = itemList.get(i).getInstitutionName();
+                if (instName == null || instName.isEmpty()) {
+                    instName = itemList.get(i).getChamberTypeName();
+                }
                 ChembarList cl = new ChembarList();
                 cl.setChamberTypeId(chamberTypeId);
                 cl.setName(chamberName);
+                cl.setShift(shift);
+                cl.setSittingTime(sitTime);
+                cl.setInstitutionId(instId);
+                cl.setInstitutionName(instName);
+                cl.setAddress(itemList.get(i).getAddress());
                 chembarLists.add(cl);
             }
           /*  doccontactLists = new ArrayList<>();
@@ -984,7 +1128,10 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
                         selectedchembarTypeName = cmm.getChamberTypeName();
                         cmbrtype.setText(selectedchembarTypeName);
                         chamberName.setText("");
-                        til_chamberDD.setHint("Institute Name");
+                        if (sittingTime != null) sittingTime.setText("");
+                        if (chamberAddress != null) chamberAddress.setText("");
+                        if (rbMorning != null) rbMorning.setChecked(true);
+                        til_chamberDD.setHint("Chamber Name *");
                         is_Chamber=true;
                         popAdd.show();
                     }
@@ -1010,7 +1157,7 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
                         selectedcontactTypeName = cmm.getContactType();
                         contacttype.setText(selectedcontactTypeName);
                         contactName.setText("");
-                        til_chamberDD.setHint("Contact "+selectedcontactTypeName);
+                        til_contactName.setHint("Contact "+selectedcontactTypeName);
                         if(cmm.getContactType().equals("Mobile"))
                         {
                             contactName.setKeyListener(DigitsKeyListener.getInstance("0123456789"));
@@ -1370,6 +1517,104 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
             exception.printStackTrace();
         }
     }
+    // Degree / Speciality / Brand / Special Day sit in one column; the user drags them
+    // into the order they want and it is remembered on the device.
+    private static final String PREF_DOCTOR_FORM = "doctorForm";
+    private static final String KEY_FIELD_ORDER = "fieldOrder";
+
+    private void setupFieldReorder() {
+        try {
+            final LinearLayout box = viewBinding.reorderSection;
+            applySavedFieldOrder(box);
+            View.OnDragListener dragListener = new View.OnDragListener() {
+                @Override
+                public boolean onDrag(View v, DragEvent event) {
+                    View dragged = (View) event.getLocalState();
+                    switch (event.getAction()) {
+                        case DragEvent.ACTION_DRAG_ENTERED:
+                            if (dragged != null && dragged != v) {
+                                int from = box.indexOfChild(dragged);
+                                int to = box.indexOfChild(v);
+                                if (from >= 0 && to >= 0) {
+                                    box.removeViewAt(from);
+                                    box.addView(dragged, to);
+                                }
+                            }
+                            break;
+                        case DragEvent.ACTION_DRAG_ENDED:
+                            if (dragged != null) dragged.setVisibility(View.VISIBLE);
+                            // the dragged card is invisible while dragging, so the container saves
+                            if (v == box) saveFieldOrder(box);
+                            break;
+                    }
+                    return true;
+                }
+            };
+            box.setOnDragListener(dragListener);
+            for (int i = 0; i < box.getChildCount(); i++) {
+                final View card = box.getChildAt(i);
+                card.setOnDragListener(dragListener);
+                View handle = card.findViewWithTag("dragHandle");
+                if (handle == null) continue;
+                handle.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        ViewCompat.startDragAndDrop(card, null, new View.DragShadowBuilder(card), card, 0);
+                        card.setVisibility(View.INVISIBLE);
+                        return true;
+                    }
+                });
+            }
+        } catch (Exception exception) {
+            Log.e("DoctorActivity", "setupFieldReorder: ", exception);
+        }
+    }
+
+    private void applySavedFieldOrder(LinearLayout box) {
+        applyFieldOrder(box, getSharedPreferences(PREF_DOCTOR_FORM, MODE_PRIVATE)
+                .getString(KEY_FIELD_ORDER, ""));
+    }
+
+    private void saveFieldOrder(LinearLayout box) {
+        getSharedPreferences(PREF_DOCTOR_FORM, MODE_PRIVATE)
+                .edit().putString(KEY_FIELD_ORDER, fieldOrderOf(box)).apply();
+    }
+
+    // cards named in the saved order move to the front in that order; anything not
+    // named (a card added or removed in a newer build) keeps its place behind them
+    static void applyFieldOrder(LinearLayout box, String saved) {
+        if (saved.isEmpty()) return;
+        int target = 0;
+        for (String name : saved.split(",")) {
+            View card = findCard(box, name);
+            if (card == null) continue;
+            box.removeView(card);
+            box.addView(card, target++);
+        }
+    }
+
+    static String fieldOrderOf(LinearLayout box) {
+        StringBuilder order = new StringBuilder();
+        for (int i = 0; i < box.getChildCount(); i++) {
+            int id = box.getChildAt(i).getId();
+            if (id == View.NO_ID) continue;
+            if (order.length() > 0) order.append(',');
+            order.append(box.getResources().getResourceEntryName(id));
+        }
+        return order.toString();
+    }
+
+    private static View findCard(LinearLayout box, String name) {
+        for (int i = 0; i < box.getChildCount(); i++) {
+            View card = box.getChildAt(i);
+            int id = card.getId();
+            if (id != View.NO_ID && name.equals(box.getResources().getResourceEntryName(id))) {
+                return card;
+            }
+        }
+        return null;
+    }
+
     private void iniPopup() {
         popAdd = new Dialog(DoctorActivity.this);
         popAdd.setContentView(R.layout.pop_chambername);
@@ -1382,27 +1627,63 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
         til_chamberDD = popAdd.findViewById(R.id.chamberDD);
         chamberName = popAdd.findViewById(R.id.chamberName);
         cmbrtype = popAdd.findViewById(R.id.cmbrtype);
+        rgShift = popAdd.findViewById(R.id.rg_shift);
+        rbMorning = popAdd.findViewById(R.id.rb_morning);
+        rbEvening = popAdd.findViewById(R.id.rb_evening);
+        til_sittingTime = popAdd.findViewById(R.id.til_sitting_time);
+        sittingTime = popAdd.findViewById(R.id.sittingTime);
+        til_chamberAddress = popAdd.findViewById(R.id.til_chamber_address);
+        chamberAddress = popAdd.findViewById(R.id.chamberAddress);
         Button cmbrBnt = popAdd.findViewById(R.id.cmbrBnt);
 
         //itemList = new ArrayList<>();
         cmbrBnt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!chamberName.getText().toString().isEmpty()) {
-                    String chembarName = chamberName.getText().toString();
-                    DoctorChamberTypeVM isitm = new DoctorChamberTypeVM(selectedchembarTypeId, selectedchembarTypeName, chembarName);
-                    itemList.add(isitm);
+                String chembarName = chamberName.getText().toString().trim();
+                String sitTime = sittingTime != null ? sittingTime.getText().toString().trim() : "";
+                String chAddress = chamberAddress != null ? chamberAddress.getText().toString().trim() : "";
 
-                    itemsAdapter = new _chamber_ListAdapter(DoctorActivity.this, itemList);
-                    viewBinding.rvChamberlist.setLayoutManager(new LinearLayoutManager(DoctorActivity.this));
-                    viewBinding.rvChamberlist.setHasFixedSize(true);
-                    viewBinding.rvChamberlist.setAdapter(itemsAdapter);
-                    itemsAdapter.notifyDataSetChanged();
-                    chamberName.setText("");
-                    popAdd.dismiss();
-                } else {
-                    chamberName.setError("Enter Institute Name");
+                if (chembarName.isEmpty()) {
+                    chamberName.setError("Enter Chamber Name");
+                    chamberName.requestFocus();
+                    return;
                 }
+                if (sitTime.isEmpty()) {
+                    if (sittingTime != null) {
+                        sittingTime.setError("Enter Sitting Time");
+                        sittingTime.requestFocus();
+                    }
+                    return;
+                }
+
+                String shift = "Morning";
+                if (rbEvening != null && rbEvening.isChecked()) {
+                    shift = "Evening";
+                }
+
+                DoctorChamberTypeVM isitm = new DoctorChamberTypeVM(
+                        selectedchembarTypeId,
+                        selectedchembarTypeName,
+                        chembarName,
+                        shift,
+                        sitTime,
+                        selectedchembarTypeId,
+                        selectedchembarTypeName,
+                        chAddress
+                );
+                itemList.add(isitm);
+
+                itemsAdapter = new _chamber_ListAdapter(DoctorActivity.this, itemList);
+                viewBinding.rvChamberlist.setLayoutManager(new LinearLayoutManager(DoctorActivity.this));
+                viewBinding.rvChamberlist.setHasFixedSize(true);
+                viewBinding.rvChamberlist.setAdapter(itemsAdapter);
+                itemsAdapter.notifyDataSetChanged();
+                chamberName.setText("");
+                if (sittingTime != null) sittingTime.setText("");
+                if (chamberAddress != null) chamberAddress.setText("");
+                if (rbMorning != null) rbMorning.setChecked(true);
+                popAdd.dismiss();
             }
         });
     }
@@ -1414,8 +1695,17 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
         popContact.getWindow().setLayout(Toolbar.LayoutParams.MATCH_PARENT, Toolbar.LayoutParams.WRAP_CONTENT);
         popContact.getWindow().getAttributes().gravity = Gravity.CENTER;
 
+        // Hide chamber specific fields in contact popup
+        RadioGroup cRg = popContact.findViewById(R.id.rg_shift);
+        if (cRg != null) cRg.setVisibility(View.GONE);
+        TextInputLayout cTilTime = popContact.findViewById(R.id.til_sitting_time);
+        if (cTilTime != null) cTilTime.setVisibility(View.GONE);
+        TextInputLayout cTilAddress = popContact.findViewById(R.id.til_chamber_address);
+        if (cTilAddress != null) cTilAddress.setVisibility(View.GONE);
+
         // ini popup widgets
-        til_chamberDD = popContact.findViewById(R.id.chamberDD);
+        til_contactName = popContact.findViewById(R.id.chamberDD);
+        til_contactName.setHint("Contact Name / Number");
         contactName = popContact.findViewById(R.id.chamberName);
         contacttype = popContact.findViewById(R.id.cmbrtype);
         Button contactBnt = popContact.findViewById(R.id.cmbrBnt);
@@ -1424,6 +1714,11 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
             public void onClick(View v) {
                 if (!contactName.getText().toString().isEmpty()) {
                     String contacName = contactName.getText().toString();
+                    if ("Mobile".equals(selectedcontactTypeName)
+                            && (contacName.length() != 11 || !contacName.startsWith("01"))) {
+                        contactName.setError("Enter a valid 11 digit mobile number starting with 01");
+                        return;
+                    }
                     DoctorContact isitm = new DoctorContact(selectedcontactTypeId, contacName,selectedcontactTypeName);
                     doccontactLists.add(isitm);
 
@@ -1611,7 +1906,10 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
                 String chembarName = clist.get(c).getChamberName();
                 String chembarTypeName = clist.get(c).getChamberTypeName();
                 int cmbrtypeid = clist.get(c).getChamberTypeId();
-                DoctorChamberTypeVM isitm = new DoctorChamberTypeVM(cmbrtypeid, chembarTypeName, chembarName);
+                String shift = clist.get(c).getShift();
+                String sitTime = clist.get(c).getSittingTime();
+                String chAddress = clist.get(c).getAddress();
+                DoctorChamberTypeVM isitm = new DoctorChamberTypeVM(cmbrtypeid, chembarTypeName, chembarName, shift, sitTime, chAddress);
                 itemList.add(isitm);
             }
             itemsAdapter = new _chamber_ListAdapter(DoctorActivity.this, itemList);
@@ -1702,7 +2000,7 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
 
         viewBinding.pupdateBnt.setOnClickListener(v -> {
             try {
-                String docName = viewBinding.docName.getText().toString();
+                String docName = viewBinding.docName.getText().toString().trim();
                 String docDegree = viewBinding.degreeListStr.getText().toString();
                 String docSpeciality = viewBinding.specilityListStr.getText().toString();
                 String institute = viewBinding.instituteListStr.getText().toString();
@@ -1728,10 +2026,28 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
                         instituteIdStr = institute;
                     }
                 }
+                String rawInstitute = viewBinding.instituteListStr.getText().toString().trim();
+                if (rawInstitute.isEmpty() || rawInstitute.equals("----") || instituteIdStr.isEmpty()) {
+                    SnackBarManagement._warning_CustomMessage(viewBinding.masterLayoutId, "Gender is mandatory! Please select Gender.");
+                    return;
+                }
                 institute = instituteIdStr;
                 String docBrand = viewBinding.brandListStr.getText().toString();
-                String docAddress = viewBinding.docAddress.getText().toString();
+                String docAddress = viewBinding.docAddress.getText().toString().trim();
 
+                if (docName.isEmpty()) {
+                    viewBinding.docName.setError("Doctor Name is required");
+                    viewBinding.docName.requestFocus();
+                    SnackBarManagement._warning_CustomMessage(viewBinding.masterLayoutId, "Doctor Name is required!");
+                    return;
+                }
+
+                if (docAddress.isEmpty()) {
+                    viewBinding.docAddress.setError("Doctor Address is required");
+                    viewBinding.docAddress.requestFocus();
+                    SnackBarManagement._warning_CustomMessage(viewBinding.masterLayoutId, "Doctor Address is mandatory!");
+                    return;
+                }
 
                 DoctorTypeVM doctorType = (DoctorTypeVM) viewBinding.doctorTypeSpinner.getSelectedItem();
                 int dtypeid = doctorType.getDoctorTypeId();
@@ -1761,9 +2077,24 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
                 for (int i = 0; i < itemList.size(); i++) {
                     String chamberName = itemList.get(i).getChamberName();
                     int chamberTypeId = itemList.get(i).getChamberTypeId();
+                    String shift = itemList.get(i).getShift();
+                    String sitTime = itemList.get(i).getSittingTime();
+                    int instId = itemList.get(i).getInstitutionId();
+                    if (instId == 0) {
+                        instId = chamberTypeId;
+                    }
+                    String instName = itemList.get(i).getInstitutionName();
+                    if (instName == null || instName.isEmpty()) {
+                        instName = itemList.get(i).getChamberTypeName();
+                    }
                     ChembarList cl = new ChembarList();
                     cl.setChamberTypeId(chamberTypeId);
                     cl.setName(chamberName);
+                    cl.setShift(shift);
+                    cl.setSittingTime(sitTime);
+                    cl.setInstitutionId(instId);
+                    cl.setInstitutionName(instName);
+                    cl.setAddress(itemList.get(i).getAddress());
                     chembarLists.add(cl);
                 }
 
@@ -1821,14 +2152,4 @@ public class DoctorActivity extends AppCompatActivity implements IDoctor.View, I
         });
     }
 
-    private InputFilter filter = new InputFilter() {
-        @Override
-        public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
-
-            if (source != null && blockCharacterSet.contains(("" + source))) {
-                return "";
-            }
-            return null;
-        }
-    };
 }

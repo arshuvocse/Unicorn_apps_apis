@@ -7,7 +7,17 @@ public class ChembarTypeWithName {
     int ChamberTypeId;
     String ChamberTypeName;
     String ChamberName;
+    String Shift;
+    String SittingTime;
+    String Address;
 
+    public String getAddress() {
+        return Address;
+    }
+
+    public void setAddress(String address) {
+        Address = address;
+    }
 
     public int getChamberTypeId() {
         return ChamberTypeId;
@@ -31,5 +41,21 @@ public class ChembarTypeWithName {
 
     public void setChamberName(String chamberName) {
         ChamberName = chamberName;
+    }
+
+    public String getShift() {
+        return Shift;
+    }
+
+    public void setShift(String shift) {
+        Shift = shift;
+    }
+
+    public String getSittingTime() {
+        return SittingTime;
+    }
+
+    public void setSittingTime(String sittingTime) {
+        SittingTime = sittingTime;
     }
 }

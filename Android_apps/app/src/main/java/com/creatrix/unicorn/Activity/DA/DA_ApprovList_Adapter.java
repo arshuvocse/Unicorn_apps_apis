@@ -162,6 +162,8 @@ public class DA_ApprovList_Adapter extends RecyclerView.Adapter<DA_ApprovList_Ad
                     holder.tv_approve.setVisibility(View.GONE);
                 }
             }
+            // DZSM (RoleTypeId 3) can approve/reject any item, whoever it is waiting on
+            if (RoleTypeId == 3 && daList.getToRoleTypeId() != 0) holder.tv_approve.setVisibility(View.VISIBLE);
 
             holder.tv_approve.setOnClickListener(v -> {
                 approval.approvalKlick(daList);

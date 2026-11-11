@@ -1,5 +1,6 @@
 package com.creatrix.unicorn.Activity.Doctor.VisitPlan;
 
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -275,14 +276,7 @@ public class VisitPlanDetailsActivity extends AppCompatActivity implements Chked
     private void filter(String word) {
         List<DoctorListViewModel> filterwordlist = new ArrayList<>();
         for (DoctorListViewModel words : docList) {
-            if (words.getDoctorName() == null) {
-                try {
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            if (words.getDoctorName().toLowerCase().contains(word.toLowerCase())) {
+            if (ReportFilterHelper.matches(words.getDoctorCode(), words.getDoctorName(), word)) {
                 filterwordlist.add(words);
             }
         }

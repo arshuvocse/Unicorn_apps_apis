@@ -164,6 +164,13 @@ public class CustomerApprovalActivity extends AppCompatActivity implements ICust
                         }
                     }
                 }
+                // DZSM (RoleTypeId 3) can approve/reject any item, whoever it is waiting on
+                if (RoleTypeId == 3) {
+                    binding.btnEdit.setVisibility(View.VISIBLE);
+                    binding.approveLayouts.btnApprove.setVisibility(View.VISIBLE);
+                    binding.approveLayouts.btnReject.setVisibility(View.VISIBLE);
+                    binding.warnToast.setVisibility(View.GONE);
+                }
                 binding.btnEdit.setOnClickListener(v -> {
                     Constants.WHO = "CustApprovalAC";
                     Intent goto_exp = new Intent(CustomerApprovalActivity.this, CustomerActivity.class);

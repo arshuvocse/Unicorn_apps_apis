@@ -960,8 +960,17 @@ public class SyncDb_Helper {
             for (int i = 0; i < aList.size(); i++) {
                 DoctorChamberName aInfo = aList.get(i);
                 String cName = aInfo.getChemberName() != null ? aInfo.getChemberName().replace("'", "''") : "";
-                String insertQuery = "Insert into tblDoctor_ChembarName(ChemberId,ChemberName,DoctorId) " +
-                        "values('" + aInfo.getChemberId() + "','" + cName + "','" + aInfo.getDoctorId() + "')";
+                String shift = aInfo.getShift() != null ? aInfo.getShift().replace("'", "''") : "";
+                String sittingTime = aInfo.getSittingTime() != null ? aInfo.getSittingTime().replace("'", "''") : "";
+                String address = aInfo.getAddress() != null ? aInfo.getAddress().replace("'", "''") : "";
+                String institutionId = aInfo.getInstitutionId() != null ? String.valueOf(aInfo.getInstitutionId()) : "0";
+                String institutionName = aInfo.getInstitutionName() != null ? aInfo.getInstitutionName().replace("'", "''") : "";
+                String lat = aInfo.getLat() != null ? aInfo.getLat().replace("'", "''") : "";
+                String lon = aInfo.getLon() != null ? aInfo.getLon().replace("'", "''") : "";
+                String insertQuery = "Insert into tblDoctor_ChembarName" +
+                        "(ChemberId,ChemberName,DoctorId,Shift,SittingTime,Address,InstitutionId,InstitutionName,Lat,Lon) " +
+                        "values('" + aInfo.getChemberId() + "','" + cName + "','" + aInfo.getDoctorId() + "'," +
+                        "'" + shift + "','" + sittingTime + "','" + address + "','" + institutionId + "','" + institutionName + "','" + lat + "','" + lon + "')";
                 database.execSQL(insertQuery);
             }
 

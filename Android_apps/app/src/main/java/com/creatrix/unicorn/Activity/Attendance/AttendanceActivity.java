@@ -37,6 +37,7 @@ import android.widget.Toast;
 
 import com.creatrix.unicorn.Activity.Attendance.Model.AttenApproval;
 import com.creatrix.unicorn.Activity.Attendance.Model.ButtonRP;
+import com.creatrix.unicorn.Activity.Attendance.Model.PunchWindow;
 import com.creatrix.unicorn.Activity.Attendance.Model.ShiftCategory;
 import com.creatrix.unicorn.Model.ResultInfo;
 import com.creatrix.unicorn.Activity.MainDashboardActivity;
@@ -46,6 +47,8 @@ import com.creatrix.unicorn.Model.Attendance;
 import com.creatrix.unicorn.Presenter.AttendancePresenter;
 import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.UtilityHelper.CameraHelper;
+import com.creatrix.unicorn.UtilityHelper.DateTimeUtil;
+import com.creatrix.unicorn.UtilityHelper.LocationGuard;
 import com.creatrix.unicorn.UtilityHelper.NetworkInformation;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
@@ -115,6 +118,7 @@ public class AttendanceActivity extends AppCompatActivity implements OnMapReadyC
     int shiftId = 0;
     String shiftInTime;
     String shiftOutTime;
+    PunchWindow punchWindow;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,6 +135,7 @@ public class AttendanceActivity extends AppCompatActivity implements OnMapReadyC
         empId = Integer.parseInt(Objects.requireNonNull(user.get(SessionManagement.KEY_EmpId)));
         hitApi_Btn(empId);
         presenter.getShiftCategoryList(empId);
+        presenter.getPunchWindow(empId);
 
         binding.toolbarCustom.setNavigationOnClickListener(v -> finish());
         initCmeraPermission();
@@ -146,7 +151,7 @@ public class AttendanceActivity extends AppCompatActivity implements OnMapReadyC
         System.out.println("Current time => " + c);
 
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String date=new SimpleDateFormat("dd-MMM-yyyy",Locale.getDefault()).format(new Date());
+        String date = DateTimeUtil.getDisplayDate();
         formattedDate = df.format(c);
 
 
@@ -170,7 +175,10 @@ public class AttendanceActivity extends AppCompatActivity implements OnMapReadyC
                 startActivity(i);
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
             } else {
-                if (isWithinShiftTime(true)) {
+                if (isLocationBlocked()) {
+                    return;
+                }
+                if (isWithinShiftTime(true) && isWithinPunchWindow(true)) {
                     handleCaptureImage("In");
                 }
             }
@@ -183,6 +191,9 @@ public class AttendanceActivity extends AppCompatActivity implements OnMapReadyC
                 startActivity(i);
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
             } else {
+                if (isLocationBlocked()) {
+                    return;
+                }
                 handleCaptureImage("Out");
             }
         });
@@ -193,6 +204,19 @@ public class AttendanceActivity extends AppCompatActivity implements OnMapReadyC
         });
     }
 
+    // Strict location rule: precise permission + GPS on + fresh, accurate, non-mock fix.
+    private boolean isLocationBlocked() {
+        String error = LocationGuard.checkEnvironment(this);
+        if (error == null) {
+            error = LocationGuard.checkFix(mLastLocation);
+        }
+        if (error != null) {
+            SnackBarManagement._warning_CustomMessage(binding.masterLayout, error);
+            return true;
+        }
+        return false;
+    }
+
     private void hitApi_Btn(int empId) {
         pd.setMessage("Preparing Attendance..");
         pd.show();
@@ -200,6 +224,12 @@ public class AttendanceActivity extends AppCompatActivity implements OnMapReadyC
         presenter.button(empId);
     }
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        startLocationUpdates();
+    }
 
     @Override
     public void onPause() {
@@ -217,65 +247,101 @@ public class AttendanceActivity extends AppCompatActivity implements OnMapReadyC
         // mGoogleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
         mGoogleMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
 
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(120000); // two minute interval
-        mLocationRequest.setFastestInterval(120000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.ACCESS_FINE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED) {
-                //Location Permission already granted
-                mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
-                mGoogleMap.setMyLocationEnabled(true);
-            } else {
-                //Request Location Permission
-                checkLocationPermission();
-            }
+        if (hasLocationPermission()) {
+            startLocationUpdates();
         } else {
-            mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
-            mGoogleMap.setMyLocationEnabled(true);
+            //Request Location Permission
+            checkLocationPermission();
         }
+    }
+
+    // Fine or coarse is enough: on Android 12+ the user may grant "approximate" only.
+    private boolean hasLocationPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    // Also called from onResume: onPause removes the updates (e.g. while the camera is open).
+    private void startLocationUpdates() {
+        if (mFusedLocationClient == null || !hasLocationPermission()) {
+            return;
+        }
+        if (mLocationRequest == null) {
+            mLocationRequest = new LocationRequest();
+            mLocationRequest.setInterval(10000);
+            mLocationRequest.setFastestInterval(5000);
+            mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        }
+        try {
+            // Seed lat/lng right away instead of waiting for the first update.
+            mFusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
+                if (location != null && lat == null
+                        && Math.abs(System.currentTimeMillis() - location.getTime()) <= 2 * 60 * 1000) {
+                    onNewLocation(location);
+                }
+            });
+            mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.getMainLooper());
+            if (mGoogleMap != null) {
+                mGoogleMap.setMyLocationEnabled(true);
+            }
+
+            // Multi-tier fallback: if GPS/Network cannot resolve indoors, try IP geolocation.
+            if (lat == null) {
+                LocationGuard.requestFix(this, (location, error) -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    if (location != null && lat == null) {
+                        onNewLocation(location);
+                    }
+                });
+            }
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void onNewLocation(Location location) {
+        Log.i("MapsActivity", "Location: " + location.getLatitude() + " " + location.getLongitude());
+        // Set the coordinates first so a geocoder/map failure can't leave lat/lng null.
+        mLastLocation = location;
+        lat = String.valueOf(location.getLatitude());
+        lng = String.valueOf(location.getLongitude());
+
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        String title = null;
+        try {
+            List<Address> addresses = new Geocoder(getApplicationContext(), Locale.getDefault())
+                    .getFromLocation(location.getLatitude(), location.getLongitude(), 5);
+            if (addresses != null && !addresses.isEmpty()) {
+                address = addresses.get(0).getAddressLine(0);
+                title = address;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (mGoogleMap == null) {
+            return;
+        }
+        if (mCurrLocationMarker != null) {
+            mCurrLocationMarker.remove();
+        }
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(latLng);
+        markerOptions.title(title);
+        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+        mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
     }
 
     LocationCallback mLocationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(LocationResult locationResult) {
-            List<Location> locationList = locationResult.getLocations();
-            if (locationList.size() > 0) {
-                //The last location in the list is the newest
-                Location location = locationList.get(locationList.size() - 1);
-                Log.i("MapsActivity", "Location: " + location.getLatitude() + " " + location.getLongitude());
-                mLastLocation = location;
-                if (mCurrLocationMarker != null) {
-                    mCurrLocationMarker.remove();
-                }
-
-                //Place current location marker
-                lat = String.valueOf(location.getLatitude());
-                lng = String.valueOf(location.getLongitude());
-                Geocoder geocoder = new Geocoder(getApplicationContext());
-                List<Address> addresses = null;
-                try {
-                    addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 5);
-                    //addresses.get(0).getLocality();
-                    // addresses.get(1).getSubLocality();
-                    LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                    MarkerOptions markerOptions = new MarkerOptions();
-                    markerOptions.position(latLng);
-                    //      markerOptions.title("Current Position");
-                    address = addresses.get(0).getAddressLine(0);
-                    markerOptions.title(addresses.get(0).getAddressLine(0));
-                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
-                    mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
-
-                    //move map camera
-                    mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
+            //The last location in the list is the newest
+            Location location = locationResult.getLastLocation();
+            if (location != null) {
+                onNewLocation(location);
             }
         }
     };
@@ -283,8 +349,7 @@ public class AttendanceActivity extends AppCompatActivity implements OnMapReadyC
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
     private void checkLocationPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
+        if (!hasLocationPermission()) {
 
             // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
@@ -301,7 +366,7 @@ public class AttendanceActivity extends AppCompatActivity implements OnMapReadyC
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 //Prompt the user once explanation has been shown
                                 ActivityCompat.requestPermissions(AttendanceActivity.this,
-                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
                                         MY_PERMISSIONS_REQUEST_LOCATION);
                             }
                         })
@@ -312,7 +377,7 @@ public class AttendanceActivity extends AppCompatActivity implements OnMapReadyC
             } else {
                 // No explanation needed, we can request the permission.
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
                         MY_PERMISSIONS_REQUEST_LOCATION);
             }
         }
@@ -325,19 +390,8 @@ public class AttendanceActivity extends AppCompatActivity implements OnMapReadyC
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_LOCATION: {
                 // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    // permission was granted, yay! Do the
-                    // location-related task you need to do.
-                    if (ContextCompat.checkSelfPermission(this,
-                            Manifest.permission.ACCESS_FINE_LOCATION)
-                            == PackageManager.PERMISSION_GRANTED) {
-
-                        mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
-                        mGoogleMap.setMyLocationEnabled(true);
-                    }
-
+                if (grantResults.length > 0 && hasLocationPermission()) {
+                    startLocationUpdates();
                 } else {
 
                     Toast.makeText(this, "permission denied", Toast.LENGTH_LONG).show();
@@ -702,7 +756,7 @@ public class AttendanceActivity extends AppCompatActivity implements OnMapReadyC
 
     public void hitPunchIn(String img_str) {
         try {
-            if (!isWithinShiftTime(true)) {
+            if (!isWithinShiftTime(true) || !isWithinPunchWindow(true)) {
                 return;
             }
             if (!img_str.isEmpty()) {
@@ -726,6 +780,8 @@ public class AttendanceActivity extends AppCompatActivity implements OnMapReadyC
                 String sds2 = lng;
                 if ((lat == null) || (lng == null)) {
                     SnackBarManagement._warning_CustomMessage(binding.masterLayout, "Error in Getting Location.Please Refresh the Page first");
+                } else if (!com.creatrix.unicorn.BuildConfig.DEBUG && LocationGuard.isMock(mLastLocation)) {
+                    SnackBarManagement._warning_CustomMessage(binding.masterLayout, "Fake/mock location detected. Turn off any mock location app to continue.");
                 } else {
                     Gson gson = new Gson();
                     String data = gson.toJson(aInfo);
@@ -762,6 +818,8 @@ public class AttendanceActivity extends AppCompatActivity implements OnMapReadyC
                 aInfo.setPOutRemarks(remarks);
                 if ((lat == null) || (lng == null)) {
                     SnackBarManagement._warning_CustomMessage(binding.masterLayout, "Error in Getting Location.Please Refresh the Page first");
+                } else if (!com.creatrix.unicorn.BuildConfig.DEBUG && LocationGuard.isMock(mLastLocation)) {
+                    SnackBarManagement._warning_CustomMessage(binding.masterLayout, "Fake/mock location detected. Turn off any mock location app to continue.");
                 } else {
 
                     Gson gson=new Gson();
@@ -799,7 +857,7 @@ public class AttendanceActivity extends AppCompatActivity implements OnMapReadyC
     }
 
     private void updatePunchButtonState() {
-        boolean withinShift = isWithinShiftTime(false);
+        boolean withinShift = isWithinShiftTime(false) && isWithinPunchWindow(false);
         binding.btnPunchIn.setEnabled(withinShift);
         binding.btnPunchOut.setEnabled(true);
         binding.btnPunchIn.setAlpha(withinShift ? 1f : 0.45f);
@@ -844,6 +902,38 @@ public class AttendanceActivity extends AppCompatActivity implements OnMapReadyC
                 SnackBarManagement._warning_CustomMessage(binding.masterLayout, "Invalid shift time. Please refresh the page");
             }
             return false;
+        }
+    }
+
+    @Override
+    public void onPunchWindow(PunchWindow window) {
+        punchWindow = window;
+        if (window.isRestricted()) {
+            binding.punchWindowText.setText("Punch-in allowed " + window.getPunchInFrom() + " - " + window.getPunchInTo());
+            binding.punchWindowText.setVisibility(View.VISIBLE);
+        } else {
+            binding.punchWindowText.setVisibility(View.GONE);
+        }
+        updatePunchButtonState();
+    }
+
+    // Employees without an active window are unrestricted. Server re-checks on save.
+    private boolean isWithinPunchWindow(boolean showMessage) {
+        if (punchWindow == null || !punchWindow.isRestricted()) {
+            return true;
+        }
+        try {
+            int now = getSecondsFromTime(getPunchTime(new Date()));
+            int from = getSecondsFromTime(punchWindow.getPunchInFrom());
+            int to = getSecondsFromTime(punchWindow.getPunchInTo()) + 59;
+            boolean allowed = from <= to ? (now >= from && now <= to) : (now >= from || now <= to);
+            if (!allowed && showMessage) {
+                SnackBarManagement._warning_CustomMessage(binding.masterLayout,
+                        "Punch in allowed only between " + punchWindow.getPunchInFrom() + " and " + punchWindow.getPunchInTo());
+            }
+            return allowed;
+        } catch (Exception exception) {
+            return true;
         }
     }
 

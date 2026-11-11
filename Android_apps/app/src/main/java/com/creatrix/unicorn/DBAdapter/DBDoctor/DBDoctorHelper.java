@@ -793,6 +793,27 @@ public class DBDoctorHelper {
                     DoctorChamberName ddInfo = new DoctorChamberName();
                     ddInfo.setChemberId(cursor.getInt(cursor.getColumnIndex("ChemberId")));
                     ddInfo.setChemberName(cursor.getString(cursor.getColumnIndex("ChemberName")));
+                    if (cursor.getColumnIndex("Shift") >= 0) {
+                        ddInfo.setShift(cursor.getString(cursor.getColumnIndex("Shift")));
+                    }
+                    if (cursor.getColumnIndex("SittingTime") >= 0) {
+                        ddInfo.setSittingTime(cursor.getString(cursor.getColumnIndex("SittingTime")));
+                    }
+                    if (cursor.getColumnIndex("Address") >= 0) {
+                        ddInfo.setAddress(cursor.getString(cursor.getColumnIndex("Address")));
+                    }
+                    if (cursor.getColumnIndex("InstitutionId") >= 0) {
+                        ddInfo.setInstitutionId(cursor.getInt(cursor.getColumnIndex("InstitutionId")));
+                    }
+                    if (cursor.getColumnIndex("InstitutionName") >= 0) {
+                        ddInfo.setInstitutionName(cursor.getString(cursor.getColumnIndex("InstitutionName")));
+                    }
+                    if (cursor.getColumnIndex("Lat") >= 0) {
+                        ddInfo.setLat(cursor.getString(cursor.getColumnIndex("Lat")));
+                    }
+                    if (cursor.getColumnIndex("Lon") >= 0) {
+                        ddInfo.setLon(cursor.getString(cursor.getColumnIndex("Lon")));
+                    }
 
                     chamberList.add(ddInfo);
                 }
@@ -804,6 +825,18 @@ public class DBDoctorHelper {
         }
         return chamberList;
     }
+
+    // Keeps the local copy in step after the server accepted a chamber location
+    public void updateChamberLocation(int chamberId, String lat, String lon) {
+        try {
+            SQLiteDatabase database = dbHelperMain.getWritableDatabase();
+            database.execSQL("UPDATE tblDoctor_ChembarName SET Lat = ?, Lon = ? WHERE ChemberId = ?",
+                    new Object[]{lat, lon, chamberId});
+        } catch (Exception exception) {
+            Log.e("CampOrderDetails", exception.toString());
+        }
+    }
+
     @SuppressLint("Range")
     public ArrayList<DoctorChamberName> getCustomerChamberIdListFromSQLite(int docId) {
         ArrayList<DoctorChamberName> chamberList = new ArrayList<>();

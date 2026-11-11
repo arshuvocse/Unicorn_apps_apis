@@ -59,7 +59,7 @@ public class DBHelperMain extends SQLiteOpenHelper {
 
         //new Table dcr
         String tblDcrInfo = "Create Table if not exists tblDcrInfo (DcrId Integer primary key AUTOINCREMENT," +
-                "DoctorId Integer,DoctorName varchar(500),DocContact varchar(500),DoctorTypeName varchar(500),ChemberName varchar(500),ProgramTypeName varchar(500),SessionUser Integer,DcrDate varchar(500),EntryTime varchar(500),VisitTypeId Integer,VisitTypeName varchar(500),ChemberId Integer,Remarks varchar(500))";
+                "DoctorId Integer,DoctorName varchar(500),DocContact varchar(500),DoctorTypeName varchar(500),ChemberName varchar(500),ProgramTypeName varchar(500),SessionUser Integer,DcrDate varchar(500),EntryTime varchar(500),VisitTypeId Integer,VisitTypeName varchar(500),ChemberId Integer,Remarks varchar(500),CCType varchar(50))";
         /* List<Product> aProList;*/
         String tbl_UserRole = "Create Table if not exists tbl_UserRole (pk Integer primary key AUTOINCREMENT,UserRoleID Integer,RoleName varchar(500))";
         String tbl_UserByRole = "Create Table if not exists tbl_UserByRole (pk Integer primary key AUTOINCREMENT,EmpInfoId Integer,EmpName varchar(500),EmpMasterCode varchar(500),UserRoleID Integer)";
@@ -130,7 +130,9 @@ public class DBHelperMain extends SQLiteOpenHelper {
                 "(ChamberTypeId Integer,ChamberTypeName varchar(500))";
         //Doctor ChembarName
         String tblDoctor_ChembarName = "Create Table if not exists tblDoctor_ChembarName" +
-                "(ChemberId Integer,ChemberName varchar(500),DoctorId Integer)";
+                "(ChemberId Integer,ChemberName varchar(500),DoctorId Integer," +
+                "Shift varchar(20),SittingTime varchar(200),Address varchar(500)," +
+                "InstitutionId Integer,InstitutionName varchar(500),Lat varchar(50),Lon varchar(50))";
 
         //Doctor_Type
         String tblDoctor_Type = "Create Table if not exists tblDoctor_Type" +
@@ -353,6 +355,45 @@ public class DBHelperMain extends SQLiteOpenHelper {
 
         try {
             db.execSQL("ALTER TABLE tblCustomerInfo ADD COLUMN CustomerBsPTag varchar(500)");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        //version 10 - chamber Shift/SittingTime/Address/Institution for DCR
+        try {
+            db.execSQL("ALTER TABLE tblDoctor_ChembarName ADD COLUMN Shift varchar(20)");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            db.execSQL("ALTER TABLE tblDoctor_ChembarName ADD COLUMN SittingTime varchar(200)");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            db.execSQL("ALTER TABLE tblDoctor_ChembarName ADD COLUMN Address varchar(500)");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            db.execSQL("ALTER TABLE tblDoctor_ChembarName ADD COLUMN InstitutionId Integer");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            db.execSQL("ALTER TABLE tblDoctor_ChembarName ADD COLUMN InstitutionName varchar(500)");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            db.execSQL("ALTER TABLE tblDoctor_ChembarName ADD COLUMN Lat varchar(50)");
+            db.execSQL("ALTER TABLE tblDoctor_ChembarName ADD COLUMN Lon varchar(50)");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //version 12 - offline DCR remembers DCR vs CVR ("ccrAdapter")
+        try {
+            db.execSQL("ALTER TABLE tblDcrInfo ADD COLUMN CCType varchar(50)");
         } catch (Exception e) {
             e.printStackTrace();
         }

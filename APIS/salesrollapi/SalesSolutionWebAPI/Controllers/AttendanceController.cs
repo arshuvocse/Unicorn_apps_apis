@@ -56,5 +56,26 @@ namespace SalesSolutionWebAPI.Controllers
             return Json(aDal.SaveShiftCategoryList(request));
         }
 
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.Route("api/Attendance/GetPunchWindow")]
+        public IHttpActionResult GetPunchWindow(int empId)
+        {
+            return Json(aDal.GetAttendancePunchWindow(empId));
+        }
+
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("api/Attendance/SavePunchWindow")]
+        public IHttpActionResult SavePunchWindow(AttendancePunchWindowRequest request)
+        {
+            return Json(aDal.SaveAttendancePunchWindow(request));
+        }
+
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("api/Attendance/RemovePunchWindow")]
+        public IHttpActionResult RemovePunchWindow(AttendancePunchWindowRequest request)
+        {
+            return Json(aDal.RemoveAttendancePunchWindow(request));
+        }
+
     }
 }

@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,13 +19,18 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.creatrix.unicorn.Network.GetDataService;
+import com.creatrix.unicorn.Network.RetrofitClientInstance;
 import com.creatrix.unicorn.Interface.IAttendanceReport;
 import com.creatrix.unicorn.Model.Report_AttendanceViewModel;
 import com.creatrix.unicorn.Presenter.Rpt_AttendancePresenter;
 import com.creatrix.unicorn.R;
 import com.creatrix.unicorn.RecyclerAdapter.Attendance_data_RecyclerAdapter;
+import com.creatrix.unicorn.UtilityHelper.DateTimeUtil;
+import com.creatrix.unicorn.UtilityHelper.ReportFilterHelper;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.UtilityHelper;
+import com.toptoche.searchablespinnerlibrary.SearchableSpinner;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -33,6 +39,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class AttendanceReportsActivity extends AppCompatActivity implements IAttendanceReport.View {
 
@@ -44,6 +54,7 @@ public class AttendanceReportsActivity extends AppCompatActivity implements IAtt
     TextView toDateViewTxt;
     IAttendanceReport.Presenter presenter;
     SessionManagement session;
+    int selectedEmpId; // 0 = All (self + hierarchy)
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,12 +74,12 @@ public class AttendanceReportsActivity extends AppCompatActivity implements IAtt
         toDateViewTxt = (TextView) findViewById(R.id.toDateViewTxt);
 
         Date c = Calendar.getInstance().getTime();
-        SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault());
-        String formattedDate = df.format(c);
+        String formattedDate = DateTimeUtil.getDisplayDate(c);
         String currentDate = formattedDate;
 
         HashMap<String, String> user = session.getUserDetails();
         int empId = Integer.parseInt(user.get(SessionManagement.KEY_EmpId));
+        selectedEmpId = empId;
         presenter.GetAttendanceData(empId, currentDate, currentDate);
 
         fromDateViewTxt.setText(currentDate.toString());
@@ -90,6 +101,9 @@ public class AttendanceReportsActivity extends AppCompatActivity implements IAtt
                 ImageView datePickerToDate = (ImageView) popupView.findViewById(R.id.datePickerToDate);
                 TextView txtFromDate = (TextView) popupView.findViewById(R.id.txtFromDate);
                 TextView txtToDate = (TextView) popupView.findViewById(R.id.txtToDate);
+                SearchableSpinner spnEmp = (SearchableSpinner) popupView.findViewById(R.id.spnEmp);
+                // Self (+ All and the team for managers; MIO: Self only, read-only)
+                ReportFilterHelper.loadSalesPersons(AttendanceReportsActivity.this, spnEmp);
 
                 txtFromDate.setText(UtilityHelper._GetCurrentDate());
                 txtToDate.setText(UtilityHelper._GetCurrentDate());
@@ -116,12 +130,13 @@ public class AttendanceReportsActivity extends AppCompatActivity implements IAtt
 
                         String fromDate = txtFromDate.getText().toString();
                         String toDate = txtToDate.getText().toString();
-                        HashMap<String, String> user = session.getUserDetails();
-                        int empId = Integer.parseInt(user.get(SessionManagement.KEY_EmpId));
-                        if (empId != 0) {
-                            if (!fromDate.equals("") && !toDate.equals("")) {
-                                presenter.GetAttendanceData(empId, fromDate, toDate);
-                            }
+                        if (spnEmp.getSelectedItem() != null) {
+                            selectedEmpId = ReportFilterHelper.selectedEmpIdOrZero(spnEmp);
+                            ((TextView) findViewById(R.id.toolbar_title)).setText(spnEmp.getSelectedItem().toString());
+                        }
+                        if (!fromDate.equals("") && !toDate.equals("")) {
+                            if (selectedEmpId == 0) loadAllAttendance(fromDate, toDate);
+                            else presenter.GetAttendanceData(selectedEmpId, fromDate, toDate);
                         }
                         fromDateViewTxt.setText(fromDate);
                         toDateViewTxt.setText(toDate);
@@ -133,6 +148,34 @@ public class AttendanceReportsActivity extends AppCompatActivity implements IAtt
             }
         });
 
+    }
+
+    // "All": one call with allTeam=1 (self + hierarchy); the employee name is prefixed to
+    // AttendanceDate so the adapter's per-date merge/header works per person
+    private void loadAllAttendance(String fromDate, String toDate) {
+        ProgressDialog pd = new ProgressDialog(this);
+        pd.setMessage("Attendance is Loading....Please wait");
+        pd.setCanceledOnTouchOutside(false);
+        pd.show();
+        GetDataService service = RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class);
+        service.GetAttendanceData(Integer.parseInt(session.getUserDetails().get(SessionManagement.KEY_EmpId)), fromDate, toDate, true)
+                .enqueue(new Callback<List<Report_AttendanceViewModel>>() {
+            @Override
+            public void onResponse(Call<List<Report_AttendanceViewModel>> call, Response<List<Report_AttendanceViewModel>> response) {
+                pd.dismiss();
+                List<Report_AttendanceViewModel> rows = response.body() == null ? new ArrayList<>() : response.body();
+                for (Report_AttendanceViewModel r : rows) {
+                    r.setAttendanceDate(r.getEmpName() + "  |  " + r.getAttendanceDate());
+                }
+                LoadAttendace(rows);
+            }
+
+            @Override
+            public void onFailure(Call<List<Report_AttendanceViewModel>> call, Throwable t) {
+                pd.dismiss();
+                OnError("Some Error");
+            }
+        });
     }
 
     public void LoadAttendace(List<Report_AttendanceViewModel> aList) {

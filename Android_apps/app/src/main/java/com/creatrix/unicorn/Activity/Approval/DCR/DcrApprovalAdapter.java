@@ -252,6 +252,8 @@ public class DcrApprovalAdapter extends RecyclerView.Adapter<DcrApprovalAdapter.
                     }
                 }
             }
+            // DZSM (RoleTypeId 3) can approve/reject any item, whoever it is waiting on
+            if (RoleTypeId == 3 && dcrVM.getToRoleTypeId() != null) tv_approve.setVisibility(View.VISIBLE);
         }
     }
     public interface approveTDCR {

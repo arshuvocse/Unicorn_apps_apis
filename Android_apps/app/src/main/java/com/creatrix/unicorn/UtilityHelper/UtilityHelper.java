@@ -105,7 +105,7 @@ public class UtilityHelper {
         picker = new DatePickerDialog(context,
                 (view, year1, monthOfYear, dayOfMonth) -> {
                     String attSelectedMonth = dayOfMonth + "-" + monthNameArray[monthOfYear] + "-" + year1;
-                    String time=new SimpleDateFormat("hh:mm a",Locale.getDefault()).format(new Date());
+                    String time=new SimpleDateFormat("hh:mm a",Locale.US).format(new Date());
                     controlName.setText(attSelectedMonth+" "+time);
                 }, year, month, day);
         picker.getDatePicker().setMinDate(System.currentTimeMillis() - 604800000);
@@ -130,11 +130,7 @@ public class UtilityHelper {
     }
 
     public static String _GetCurrentDate() {
-        Date c = Calendar.getInstance().getTime();
-        SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault());
-       // String formattedDate = df.format(c);
-        //String currentDate = formattedDate;
-        return df.format(c);
+        return DateTimeUtil.getDisplayDate();
     }
 
     public static <T> List<T> getList(String jsonArray, Class<T> clazz) {

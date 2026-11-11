@@ -265,6 +265,35 @@
                 android:textColor="@color/deepBlue"
                 android:textSize="14sp" />
 
+            <RadioGroup
+                android:id="@+id/rg_shift"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/rb_morning"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/lato_bold"
+                    android:text="@string/morning"
+                    android:textColor="@color/black"
+                    android:textSize="14sp" />
+
+                <RadioButton
+                    android:id="@+id/rb_evening"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/lato_bold"
+                    android:text="@string/evening"
+                    android:textColor="@color/black"
+                    android:textSize="14sp" />
+
+            </RadioGroup>
+
             <Spinner
                 android:id="@+id/chamberSpinner"
                 android:layout_width="match_parent"
@@ -273,6 +302,50 @@
                 android:background="@drawable/bg_dcr_field"
                 android:contentDescription="@string/tag_spinner"
                 android:minHeight="48dp" />
+
+            <LinearLayout
+                android:id="@+id/chamberInfoSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/chamberSittingTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/latoregular"
+                    android:textColor="@color/deepBlue"
+                    android:textSize="13sp"
+                    android:visibility="gone"
+                    tools:text="Time: 10:00 AM - 01:00 PM" />
+
+                <TextView
+                    android:id="@+id/chamberAddressTxt"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="@font/latoregular"
+                    android:textColor="@color/deepBlue"
+                    android:textSize="13sp"
+                    android:visibility="gone"
+                    tools:text="Address: House 12, Road 5, Dhaka" />
+
+                <ImageButton
+                    android:id="@+id/chamberLocationBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="4dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/chamber_location_save"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_location"
+                    android:tint="@color/deepBlue"
+                    android:visibility="gone" />
+
+            </LinearLayout>
 
 
         </LinearLayout>

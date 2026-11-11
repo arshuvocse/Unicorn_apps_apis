@@ -5,6 +5,7 @@ import androidx.annotation.Keep;
 @Keep public class CustomerARModel {
     int CustomerMasterId;
     String CustomerName;
+    String CustomerCode;
     String MarketName;
     String MarketCode;
     String ActionStatus;
@@ -40,6 +41,10 @@ import androidx.annotation.Keep;
     public void setCustomerMasterId(int customerMasterId) {
         CustomerMasterId = customerMasterId;
     }
+    public String getCustomerCode() { return CustomerCode; }
+
+    public void setCustomerCode(String customerCode) { CustomerCode = customerCode; }
+
     public String getCustomerName() {
         return CustomerName;
     }

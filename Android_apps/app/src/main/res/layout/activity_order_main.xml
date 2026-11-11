@@ -121,10 +121,12 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="64dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="64dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:paddingHorizontal="10dp">
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="8dp">
 
                     <FrameLayout
                         android:layout_width="40dp"
@@ -180,25 +182,23 @@
                                 android:fontFamily="@font/lato"
                                 android:textColor="@color/black"
                                 android:textSize="11sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginHorizontal="6dp"
-                                android:text="•"
-                                android:textColor="#C3CAD4"
-                                android:textSize="11sp" />
-
-                            <TextView
-                                android:id="@+id/customer_adress_txt"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:ellipsize="end"
-                                android:maxLines="1"
-                                android:textColor="@color/textGrey"
-                                android:textSize="11sp" />
                         </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/customer_adress_txt"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:textColor="@color/textGrey"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/customer_delivery_adress_txt"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:textColor="@color/textGrey"
+                            android:textSize="11sp" />
 
                     </LinearLayout>
                 </LinearLayout>

@@ -32,6 +32,7 @@ import com.creatrix.unicorn.Network.APICall_Report_i;
 import com.creatrix.unicorn.Network.RetrofitClientInstance;
 import com.creatrix.unicorn.Presenter.MarketStructurePresenter;
 import com.creatrix.unicorn.R;
+import com.creatrix.unicorn.UtilityHelper.DateTimeUtil;
 import com.creatrix.unicorn.UtilityHelper.SessionManagement;
 import com.creatrix.unicorn.UtilityHelper.SnackBarManagement;
 import com.creatrix.unicorn.UtilityHelper.UtilityHelper;
@@ -71,7 +72,7 @@ public class ActivityBonusGift extends AppCompatActivity implements IMarketStrac
         setContentView(binding.getRoot());
         ftm = FilterMasterBinding.inflate(getLayoutInflater());
         mkpresenter = new MarketStructurePresenter(this, ActivityBonusGift.this);
-        today = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault()).format(new Date());
+        today = DateTimeUtil.getDisplayDate();
         pd=new ProgressDialog(ActivityBonusGift.this);
         session = new SessionManagement(getApplicationContext());
         userInfo = session.getUserDetails();

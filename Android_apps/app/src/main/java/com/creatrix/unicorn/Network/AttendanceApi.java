@@ -23,6 +23,9 @@ public interface AttendanceApi {
     @GET("/api/Attendance/GetShiftCategoryList")
     Call<List<ShiftCategory>> GetShiftCategoryList(@Query("empId") int empId);
 
+    @GET("/api/Attendance/GetPunchWindow")
+    Call<List<com.creatrix.unicorn.Activity.Attendance.Model.PunchWindow>> GetPunchWindow(@Query("empId") int empId);
+
     @POST("/api/Attendance/SaveShiftCategoryList")
     Call<ResultInfo> SaveShiftCategoryList(@Body SaveShiftCategoryRequest request);
 

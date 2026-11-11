@@ -35,6 +35,10 @@ public class OrderMasterModel {
     String Remarks;
     String OrderType;
     Double TpPercentage;
+    // where the order was submitted from; null when no GPS fix
+    String Latitude;
+    String Longitude;
+    String StreetAddress;
 
     List<CampaignMaster2> campaignMasters;
     List<Product> OrderDetails = null;
@@ -118,6 +122,12 @@ public class OrderMasterModel {
 
     public void setTpPercentage(Double tpPercentage) {
         TpPercentage = tpPercentage;
+    }
+
+    public void setSubmitLocation(Double lat, Double lon, String address) {
+        Latitude = lat == null ? null : String.valueOf(lat);
+        Longitude = lon == null ? null : String.valueOf(lon);
+        StreetAddress = address;
     }
 
     public List<CampaignMaster2> getCampaignMasters() {

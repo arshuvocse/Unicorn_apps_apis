@@ -36,16 +36,49 @@ public class _chamber_ListAdapter extends RecyclerView.Adapter<_chamber_ListAdap
 
     @Override
     public void onBindViewHolder(_chamber_ListAdapter.BookViewHolder holder, int position) {
-
-
         DoctorChamberTypeVM ad = aChamberList.get(position);
-        holder.tv_chamberTypeName.setText(ad.getChamberTypeName());
+
+        String shift = ad.getShift();
+        if (shift != null && !shift.isEmpty()) {
+            holder.tv_shift.setVisibility(View.VISIBLE);
+            holder.tv_shift.setText(shift);
+        } else {
+            holder.tv_shift.setVisibility(View.GONE);
+        }
+
+        if (ad.getChamberTypeName() != null && !ad.getChamberTypeName().isEmpty()) {
+            holder.tv_chamberTypeName.setVisibility(View.VISIBLE);
+            holder.tv_chamberTypeName.setText(ad.getChamberTypeName());
+        } else {
+            holder.tv_chamberTypeName.setVisibility(View.GONE);
+        }
+
         holder.chamberName.setText(ad.getChamberName());
+
+        String sittingTime = ad.getSittingTime();
+        if (sittingTime != null && !sittingTime.isEmpty()) {
+            holder.tv_sittingTime.setVisibility(View.VISIBLE);
+            holder.tv_sittingTime.setText("Time: " + sittingTime);
+        } else {
+            holder.tv_sittingTime.setVisibility(View.GONE);
+        }
+
+        String address = ad.getAddress();
+        if (address != null && !address.isEmpty()) {
+            holder.tv_chamberAddress.setVisibility(View.VISIBLE);
+            holder.tv_chamberAddress.setText("Address: " + address);
+        } else {
+            holder.tv_chamberAddress.setVisibility(View.GONE);
+        }
+
         holder.del.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                aChamberList.remove(holder.getAdapterPosition());
-                notifyDataSetChanged();
+                int adapterPosition = holder.getAdapterPosition();
+                if (adapterPosition != RecyclerView.NO_POSITION && adapterPosition < aChamberList.size()) {
+                    aChamberList.remove(adapterPosition);
+                    notifyDataSetChanged();
+                }
             }
         });
 
@@ -59,15 +92,17 @@ public class _chamber_ListAdapter extends RecyclerView.Adapter<_chamber_ListAdap
 
 
     public class BookViewHolder extends RecyclerView.ViewHolder {
-        public TextView tv_chamberTypeName, chamberName;
+        public TextView tv_shift, tv_chamberTypeName, chamberName, tv_sittingTime, tv_chamberAddress;
         public ImageView del;
-
 
         public BookViewHolder(View view) {
             super(view);
-            tv_chamberTypeName = (TextView) view.findViewById(R.id.tv_chamberTypeName);
-            chamberName = (TextView) view.findViewById(R.id.tv_chamberName);
-            del = (ImageView) view.findViewById(R.id.iv_del);
+            tv_shift = view.findViewById(R.id.tv_shift);
+            tv_chamberTypeName = view.findViewById(R.id.tv_chamberTypeName);
+            chamberName = view.findViewById(R.id.tv_chamberName);
+            tv_sittingTime = view.findViewById(R.id.tv_sittingTime);
+            tv_chamberAddress = view.findViewById(R.id.tv_chamberAddress);
+            del = view.findViewById(R.id.iv_del);
         }
     }
 

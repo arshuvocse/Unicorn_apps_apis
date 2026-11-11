@@ -41,4 +41,12 @@ namespace SalesSolutionWebAPI.Models
         public string ShiftCategory { get; set; }
     }
 
+    public class AttendancePunchWindowRequest
+    {
+        public int EmpId { get; set; }
+        public string PunchInFrom { get; set; } // HH:mm
+        public string PunchInTo { get; set; }   // HH:mm
+        public int? EntryBy { get; set; }
+    }
+
 }
