@@ -14,6 +14,24 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
+    -- No BEGIN / ROLLBACK / COMMIT TRAN in this procedure: the API already runs it inside its own transaction.
+    -- The live version did ROLLBACK TRAN on this path, which ended the API's transaction too, so the API's
+    -- commit failed and the app got HTTP 500 instead of the "already provided attendance" message.
+    IF EXISTS
+    (
+        SELECT 1
+        FROM dbo.tblMarketAttendance_Master_webapi WITH (UPDLOCK, HOLDLOCK)
+        WHERE EmpInfoId = @empId
+          -- 10 minutes, matching the API message. Was 1 hour, which also blocked a double-shift
+          -- employee from starting the second shift right after ending the first.
+          AND PINCreatedDateTime BETWEEN DATEADD(MINUTE, -10, GETDATE())
+                                     AND DATEADD(SECOND, 30, GETDATE())
+    )
+    BEGIN
+        SELECT CAST(-1 AS INT);
+        RETURN;
+    END;
+
     DECLARE @Now DATETIME = GETDATE();
     DECLARE @EntryTime TIME(7) = CAST(GETDATE() AS TIME);
     DECLARE @AttendanceId INT = NULL;
@@ -231,7 +249,7 @@ BEGIN
     )
     VALUES
     (
-        @empId, FORMAT(@Now, 'hh:mm tt'), @pInLat, @pInLong, @remarks,
+        @empId, FORMAT(@Now, 'hh:mm:ss tt'), @pInLat, @pInLong, @remarks,
         @Now, ISNULL(@EntryDate, @Now), @ShiftId, @AttType,
         0, @UserRoleID, @AttAddress, @GroupId, @RegionId,
         @AreaId, @TerritoryId, @SubTerritoryId, @MarketId, @GroupName,

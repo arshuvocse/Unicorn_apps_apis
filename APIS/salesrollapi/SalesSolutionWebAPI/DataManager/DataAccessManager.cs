@@ -12,7 +12,8 @@ namespace SalesSolutionWebAPI.DataManager
         private SqlDataReader sqlDataReader = null;
         private SqlTransaction sqlTransaction = null;
         private SqlDataAdapter sqlDataAdapter = null;
-        private const int CommandTimeout = 1200000;
+        // Seconds. Was ~14 to ~138 days, so a stuck query never ended and piled up when the server was under memory pressure.
+        private const int CommandTimeout = 300;
         private bool isException;
         private bool returnValue = true;
         private string ConnectionString(string database)
@@ -23,6 +24,9 @@ namespace SalesSolutionWebAPI.DataManager
         }
         public bool SqlConnectionOpen(string database)
         {
+            // A failure on an earlier call must not make this new connection roll back its own successful work.
+            isException = false;
+            returnValue = true;
             try
             {
                 sqlConnection = new SqlConnection(ConnectionString(database));
@@ -71,7 +75,8 @@ namespace SalesSolutionWebAPI.DataManager
         {
             try
             {
-                if (sqlConnection.State == ConnectionState.Open)
+                // Null when Open itself failed: without the guards the NullReferenceException here hid the real error.
+                if (sqlConnection != null && sqlConnection.State == ConnectionState.Open)
                 {
                     if (sqlTransaction != null)
                     {
@@ -80,17 +85,23 @@ namespace SalesSolutionWebAPI.DataManager
                             sqlDataReader.Close();
 
                         }
-                        if (IsRollBack)
+                        // Connection is null once a procedure has already ended the transaction itself (its own
+                        // ROLLBACK TRAN, e.g. the "wait 10 minutes" punch path). Commit then threw
+                        // InvalidOperationException out of the caller's finally and the app got HTTP 500.
+                        if (sqlTransaction.Connection != null)
                         {
-                            sqlTransaction.Rollback();
-                        }
-                        else
-                        {
-                            sqlTransaction.Commit();
+                            if (IsRollBack)
+                            {
+                                sqlTransaction.Rollback();
+                            }
+                            else
+                            {
+                                sqlTransaction.Commit();
+                            }
                         }
                         sqlTransaction.Dispose();
                     }
-                    sqlCommand.Dispose();
+                    if (sqlCommand != null) sqlCommand.Dispose();
                     sqlConnection.Close();
                 }
 
@@ -155,7 +166,7 @@ namespace SalesSolutionWebAPI.DataManager
                     CommandType = CommandType.StoredProcedure,
                     CommandText = StoreProcedure,
                     Transaction = sqlTransaction ,
-                    CommandTimeout=12000000
+                    CommandTimeout = CommandTimeout
                 };
 
                 sqlCommand.Parameters.Clear();
@@ -240,7 +251,7 @@ namespace SalesSolutionWebAPI.DataManager
                     CommandType = CommandType.StoredProcedure,
                     CommandText = StoreProcedure,
                     Transaction = sqlTransaction,
-                   CommandTimeout=12000000
+                    CommandTimeout = CommandTimeout
                 };
 
                 sqlCommand.Parameters.Clear();
